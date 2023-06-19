@@ -1,6 +1,5 @@
 package com.project.bucketmanager.Controllers;
 
-import com.project.bucketmanager.ExceptionHandler.Exceptions.EmptyFileException;
 import com.project.bucketmanager.Models.BucketContent;
 import com.project.bucketmanager.Models.ContentDetails;
 import com.project.bucketmanager.Models.FileDownloaded;
