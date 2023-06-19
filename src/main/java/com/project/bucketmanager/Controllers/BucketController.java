@@ -40,9 +40,6 @@ public class BucketController {
             @RequestParam("file")MultipartFile file,
             @PathVariable String bucketName
     ){
-        if(file.isEmpty()){
-            throw new EmptyFileException("Empty file!");
-        }
         bucketService.updateFileToBucket(file,bucketName);
         FileUploaded fileUploaded = new FileUploaded("File uploaded!",file.getSize(),file.getOriginalFilename());
         return ResponseEntity.status(HttpStatus.CREATED).body(fileUploaded);

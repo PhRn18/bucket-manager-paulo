@@ -6,6 +6,7 @@ import com.project.bucketmanager.Models.Content;
 import com.project.bucketmanager.Models.ContentDetails;
 import com.project.bucketmanager.Models.FileDownloaded;
 import com.project.bucketmanager.Services.BucketService;
+import com.project.bucketmanager.Services.SnsService;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
@@ -25,8 +26,10 @@ import java.util.stream.Collectors;
 @Service
 public class BucketServiceImpl implements BucketService {
     private final S3Client s3Client;
-    public BucketServiceImpl(S3Client s3Client) {
+    private final SnsService snsService;
+    public BucketServiceImpl(S3Client s3Client,SnsService snsService) {
         this.s3Client = s3Client;
+        this.snsService = snsService;
     }
     @Override
     @Cacheable("cachedBucketContent")
@@ -77,6 +80,9 @@ public class BucketServiceImpl implements BucketService {
     @CacheEvict(value = "cachedBucketContent", allEntries = true)
     public void updateFileToBucket(MultipartFile file, String bucketName) {
         validateStringParam(bucketName);
+        if(file.isEmpty()){
+            throw new EmptyFileException("Empty file!");
+        }
 
         String fileName = file.getOriginalFilename();
         try (InputStream inputStream = file.getInputStream()) {
@@ -94,6 +100,7 @@ public class BucketServiceImpl implements BucketService {
                         .key(fileName)
                         .contentType(file.getContentType())
                         .build(), fileInputStream);
+                snsService.notifyFileUploaded("File uploaded to bucket : "+bucketName);
             }
         } catch (IOException e) {
             throw new FileUploadException("Unable to upload the file: " + e.getMessage());
@@ -140,6 +147,7 @@ public class BucketServiceImpl implements BucketService {
                     .orElseThrow(()->new FileDeleteException("Unable to delete file from S3 bucket - File not found"));
 
             s3Client.deleteObject(deleteObjectRequest);
+            snsService.notifyFileDeleted("File name: "+key + "deleted!");
         } catch (S3Exception e) {
             throw new FileDeleteException("Unable to delete file from S3 bucket!", e);
         }

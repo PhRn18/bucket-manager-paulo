@@ -1,14 +1,18 @@
 package com.project.bucketmanager.Services.Impl;
 
+import com.project.bucketmanager.ExceptionHandler.Exceptions.FileAlreadyExistsException;
 import com.project.bucketmanager.Models.BucketContent;
 import com.project.bucketmanager.Models.Content;
 import com.project.bucketmanager.Models.ContentDetails;
 import com.project.bucketmanager.Services.BucketService;
+import com.project.bucketmanager.Services.SnsService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.mock.web.MockMultipartFile;
+import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 
@@ -17,18 +21,21 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @SpringBootTest
 class BucketServiceImplTest {
     @Mock
     private S3Client s3Client;
+    @Mock
+    private SnsService snsService;
     private BucketService bucketService;
     @BeforeEach
     void setUp(){
         MockitoAnnotations.openMocks(this);
-        bucketService = new BucketServiceImpl(s3Client);
+        bucketService = new BucketServiceImpl(s3Client,snsService);
     }
     @Test
     void listAllBucketContent() {
@@ -86,6 +93,39 @@ class BucketServiceImplTest {
         assertThat(contentDetails3.geteTag()).isEqualTo(s3Object3.eTag());
     }
 
+    @Test
+    void uploadFileToBucket_WhenFileDoesNotExist_UploadsFileAndNotifies() {
+        String bucketName = "bucket-1";
+        String fileName = "test.txt";
+        String contentType = "text/plain";
+
+        byte[] fileContent = "test content".getBytes();
+        MockMultipartFile file = new MockMultipartFile(fileName, fileName, contentType, fileContent);
+
+        when(s3Client.headObject(any(HeadObjectRequest.class))).thenThrow(NoSuchKeyException.class);
+
+        bucketService.updateFileToBucket(file, bucketName);
+
+        verify(s3Client).putObject(any(PutObjectRequest.class), any(RequestBody.class));
+        verify(snsService).notifyFileUploaded("File uploaded to bucket : " + bucketName);
+    }
+
+    @Test
+    void uploadFileToBucket_WhenFileExists_ThrowsFileAlreadyExistsException() {
+        String bucketName = "bucket-1";
+        String fileName = "test.txt";
+        String contentType = "text/plain";
+
+        byte[] fileContent = "test content".getBytes();
+        MockMultipartFile file = new MockMultipartFile(fileName, fileName, contentType, fileContent);
+
+        HeadObjectResponse headObjectResponse = HeadObjectResponse.builder().build();
+        when(s3Client.headObject(any(HeadObjectRequest.class))).thenReturn(headObjectResponse);
+
+        assertThrows(FileAlreadyExistsException.class, () -> bucketService.updateFileToBucket(file, bucketName));
+        verify(s3Client, never()).putObject(any(PutObjectRequest.class), any(RequestBody.class));
+        verify(snsService, never()).notifyFileUploaded(anyString());
+    }
 
     private static S3Object createS3Object(String key,String eTag){
         return S3Object
