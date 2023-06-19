@@ -1,18 +1,34 @@
 stages:
+  - build-environment
   - test
+
+variables:
+  pgpassword: postgres
+  pguser: postgres
+  databaseName: bucketmanager
 
 services:
   - name: postgres:latest
     alias: postgres
+    variables:
+      POSTGRES_USER: $pguser
+      POSTGRES_PASSWORD: $pgpassword
+    
 
 cache:
   paths:
     - /var/lib/docker
+    - .m2/repository
 
-
+buildEnvironment:
+  stage: build-environment
+  image: postgres:latest
+  script:
+    - export PGPASSWORD=$pgpassword
+    - psql -h postgres -U $pguser -c "CREATE DATABASE $databaseName;"
 
 test:
   stage: test
-
+  image: maven:latest
   script:
-    - echo "hello"
+    - mvn test
