@@ -26,9 +26,13 @@ buildEnvironment:
   script:
     - export PGPASSWORD=$pgpassword
     - psql -h postgres -U $pguser -c "CREATE DATABASE $databaseName;"
+    - databases=$(psql -h postgres -U $pguser -c "SELECT datname FROM pg_database;" | grep -w $databaseName)
+    - if [[ -z "$databases" ]]; then echo "O banco de dados $databaseName não está na lista.";exit 1; else echo "O banco de dados $databaseName está na lista."; fi
+
 
 test:
   stage: test
   image: maven:latest
   script:
-    - mvn test
+    - export SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/$databaseName
+
