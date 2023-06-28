@@ -1,24 +1,30 @@
 package com.project.bucketmanager.Services.Impl;
 
 import com.project.bucketmanager.ExceptionHandler.Exceptions.*;
-import com.project.bucketmanager.Models.BucketContent;
-import com.project.bucketmanager.Models.Content;
-import com.project.bucketmanager.Models.ContentDetails;
-import com.project.bucketmanager.Models.FileDownloaded;
+import com.project.bucketmanager.Models.*;
 import com.project.bucketmanager.Services.BucketService;
 import com.project.bucketmanager.Services.SnsService;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 
 import java.io.*;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.time.Duration;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,9 +32,12 @@ import java.util.stream.Collectors;
 public class BucketServiceImpl implements BucketService {
     private final S3Client s3Client;
     private final SnsService snsService;
-    public BucketServiceImpl(S3Client s3Client,SnsService snsService) {
+
+    private final S3Presigner s3Presigner;
+    public BucketServiceImpl(S3Client s3Client,SnsService snsService,S3Presigner s3Presigner) {
         this.s3Client = s3Client;
         this.snsService = snsService;
+        this.s3Presigner = s3Presigner;
     }
     @Override
     @Cacheable("cachedBucketContent")
@@ -118,6 +127,25 @@ public class BucketServiceImpl implements BucketService {
             return new FileDownloaded(inputStreamResource,contentType);
         } catch (Exception e) {
             throw new FileDownloadException("Unable to download S3 file!.", e);
+        }
+    }
+
+    @Override
+    public String generateFileUrl(String bucketName, String key,String expirationTime) {
+        validateStringParam(bucketName);
+        validateStringParam(key);
+
+        GetObjectRequest getObjectRequest = getObjectRequest(bucketName, key);
+
+        GetObjectPresignRequest getObjectPresignRequest = GetObjectPresignRequest.builder()
+                .signatureDuration(Duration.ofMinutes(Long.parseLong(expirationTime)))
+                .getObjectRequest(getObjectRequest)
+                .build();
+
+        try{
+            return s3Presigner.presignGetObject(getObjectPresignRequest).url().toString();
+        }catch (S3Exception e){
+            throw new PresignUrlException("Unable to generate the file url");
         }
     }
 

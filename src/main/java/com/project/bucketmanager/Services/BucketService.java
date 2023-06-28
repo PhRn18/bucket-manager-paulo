@@ -10,5 +10,6 @@ public interface BucketService {
     ContentDetails getBucketContentDetailsByKey(String bucketName,String key);
     void updateFileToBucket(MultipartFile file,String bucketName);
     FileDownloaded downloadFileFromBucket(String bucketName, String key);
+    String generateFileUrl(String bucketName,String key,String expirationTime);
     void deleteFileFromBucket(String bucketName,String key);
 }

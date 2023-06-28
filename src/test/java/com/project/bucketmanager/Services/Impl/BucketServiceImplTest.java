@@ -15,6 +15,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 
 import java.time.Instant;
 import java.util.List;
@@ -31,11 +32,14 @@ class BucketServiceImplTest {
     private S3Client s3Client;
     @Mock
     private SnsService snsService;
+
+    @Mock
+    private S3Presigner s3Presigner;
     private BucketService bucketService;
     @BeforeEach
     void setUp(){
         MockitoAnnotations.openMocks(this);
-        bucketService = new BucketServiceImpl(s3Client,snsService);
+        bucketService = new BucketServiceImpl(s3Client,snsService,s3Presigner);
     }
     @Test
     void listAllBucketContent() {

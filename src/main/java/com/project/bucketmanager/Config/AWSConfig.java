@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
+import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.sns.SnsClient;
 import software.amazon.awssdk.services.sns.SnsClientBuilder;
 
@@ -20,6 +21,24 @@ public class AWSConfig {
 
     @Value("${aws.sns.region}")
     private String snsRegion;
+
+    @Bean
+    @ConditionalOnProperty(value = "spring.profiles.active", havingValue = "dev")
+    public S3Presigner s3PresignerDev(@Value("${aws.bucket.endpoint}") String bucketEndpoint) {
+        return S3Presigner.builder()
+                .region(Region.of(bucketRegion))
+                .endpointOverride(URI.create(bucketEndpoint))
+                .build();
+    }
+
+    @Bean
+    @ConditionalOnProperty(value = "spring.profiles.active", havingValue = "prod", matchIfMissing = true)
+    public S3Presigner s3PresignerProd() {
+        return S3Presigner.builder()
+                .region(Region.of(bucketRegion))
+                .build();
+    }
+
 
     @Bean
     @ConditionalOnProperty(value = "spring.profiles.active", havingValue = "dev")

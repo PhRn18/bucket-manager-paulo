@@ -60,6 +60,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(status).body(response);
     }
 
+    @ExceptionHandler(PresignUrlException.class)
+    public ResponseEntity<Map<String,Object>> handlePresignUrlException(PresignUrlException ex){
+        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+        Map<String,Object> response = buildDefaultErrorMap(ex,status);
+        return ResponseEntity.status(status).body(response);
+    }
+
     protected Map<String,Object> buildDefaultErrorMap(Exception ex,HttpStatus status){
         Map<String,Object> response = new HashMap<>();
         response.put("HTTP_STATUS",status);

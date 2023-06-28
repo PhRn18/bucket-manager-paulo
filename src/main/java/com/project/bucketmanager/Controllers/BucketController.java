@@ -1,9 +1,6 @@
 package com.project.bucketmanager.Controllers;
 
-import com.project.bucketmanager.Models.BucketContent;
-import com.project.bucketmanager.Models.ContentDetails;
-import com.project.bucketmanager.Models.FileDownloaded;
-import com.project.bucketmanager.Models.FileUploaded;
+import com.project.bucketmanager.Models.*;
 import com.project.bucketmanager.Services.BucketService;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
@@ -65,6 +62,16 @@ public class BucketController {
         headers.setContentDisposition(ContentDisposition.builder(contentDispositionValue).filename(key).build());
         headers.setContentType(MediaType.parseMediaType(contentType));
         return new ResponseEntity<>(inputStreamResource, headers, HttpStatus.OK);
+    }
+
+    @GetMapping("/url/{bucketName}/{key}/{expirationTime}")
+    public ResponseEntity<String> generateFileUrl(
+            @PathVariable String bucketName,
+            @PathVariable String key,
+            @PathVariable String expirationTime
+    ){
+        String url = bucketService.generateFileUrl(bucketName,key,expirationTime);
+        return ResponseEntity.ok(url);
     }
 
     @DeleteMapping("/{bucketName}/{key}")
