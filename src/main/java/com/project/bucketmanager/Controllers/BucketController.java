@@ -22,10 +22,10 @@ public class BucketController {
         return ResponseEntity.ok(result);
     }
 
-    @GetMapping("/details/{bucketName}/{key}")
+    @GetMapping("/details/{bucketName}")
     public ResponseEntity<ContentDetails> listBucketContentDetails(
             @PathVariable String bucketName,
-            @PathVariable String key
+            @RequestParam String key
     ){
         ContentDetails contentDetails = bucketService.getBucketContentDetailsByKey(bucketName,key);
         return ResponseEntity.ok(contentDetails);
@@ -41,10 +41,10 @@ public class BucketController {
         return ResponseEntity.status(HttpStatus.CREATED).body(fileUploaded);
     }
 
-    @GetMapping("/download/{bucketName}/{key}/{contentDisposition}")
+    @GetMapping("/download/{bucketName}/{contentDisposition}")
     public ResponseEntity<Resource> downloadFileFromBucket(
             @PathVariable String bucketName,
-            @PathVariable String key,
+            @RequestParam String key,
             @PathVariable(required = false) String contentDisposition
     ){
         String contentDispositionValue = "attachment";
@@ -64,20 +64,20 @@ public class BucketController {
         return new ResponseEntity<>(inputStreamResource, headers, HttpStatus.OK);
     }
 
-    @GetMapping("/url/{bucketName}/{key}/{expirationTime}")
+    @GetMapping("/url/{bucketName}/{expirationTime}")
     public ResponseEntity<String> generateFileUrl(
             @PathVariable String bucketName,
-            @PathVariable String key,
+            @RequestParam String key,
             @PathVariable String expirationTime
     ){
         String url = bucketService.generateFileUrl(bucketName,key,expirationTime);
         return ResponseEntity.ok(url);
     }
 
-    @DeleteMapping("/{bucketName}/{key}")
+    @DeleteMapping("/{bucketName}")
     public ResponseEntity<?> deleteBucketFile(
             @PathVariable String bucketName,
-            @PathVariable String key
+            @RequestParam String key
     ){
         bucketService.deleteFileFromBucket(bucketName, key);
         return ResponseEntity.status(HttpStatus.CREATED).build();

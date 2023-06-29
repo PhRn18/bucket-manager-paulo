@@ -11,9 +11,11 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.multipart.MultipartFile;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -60,7 +62,8 @@ class BucketControllerTest {
 
         when(bucketService.getBucketContentDetailsByKey(bucketName, key)).thenReturn(expectedDetails);
 
-        mockMvc.perform(get("/bucket/details/{bucketName}/{key}", bucketName, key))
+        mockMvc.perform(get("/bucket/details/{bucketName}", bucketName)
+                        .queryParam("key",key))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andReturn();
@@ -101,7 +104,8 @@ class BucketControllerTest {
         when(bucketService.downloadFileFromBucket(bucketName, key)).thenReturn(fileDownloaded);
 
         mockMvc.perform(
-                        get("/bucket/download/{bucketName}/{key}/{contentDisposition}", bucketName, key, contentDisposition)
+                        get("/bucket/download/{bucketName}/{contentDisposition}", bucketName, contentDisposition)
+                                .queryParam("key",key)
                 )
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.TEXT_PLAIN))
@@ -123,7 +127,8 @@ class BucketControllerTest {
         when(bucketService.downloadFileFromBucket(bucketName, key)).thenReturn(fileDownloaded);
 
         mockMvc.perform(
-                        get("/bucket/download/{bucketName}/{key}/{contentDisposition}", bucketName, key, contentDisposition)
+                        get("/bucket/download/{bucketName}/{contentDisposition}", bucketName, contentDisposition)
+                                .queryParam("key",key)
                 )
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.TEXT_PLAIN))
@@ -132,12 +137,36 @@ class BucketControllerTest {
     }
 
     @Test
+    void generateFileUrl() throws Exception {
+        String bucketName = "bucket-name";
+        String key = "file/sampleFile.json";
+        String expirationTime = "60"; //minutes
+
+        String mockUrl = "aws.s3.amazonaws.com";
+
+        when(bucketService.generateFileUrl(bucketName,key,expirationTime)).thenReturn(mockUrl);
+
+        MvcResult mvcResult = mockMvc.perform(
+                        get("/bucket/url/{bucketName}/{expirationTime}", bucketName, expirationTime)
+                                .queryParam("key", key)
+                )
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String responseBody = mvcResult.getResponse().getContentAsString();
+
+        assertEquals(responseBody,mockUrl);
+
+    }
+
+    @Test
     void deleteBucketFile() throws Exception {
         String bucketName = "bucket-1";
         String key = "file.txt";
 
         mockMvc.perform(
-                        delete("/bucket/{bucketName}/{key}", bucketName, key)
+                        delete("/bucket/{bucketName}", bucketName)
+                                .queryParam("key",key)
                 )
                 .andExpect(status().isCreated())
                 .andReturn();

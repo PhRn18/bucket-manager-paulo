@@ -16,7 +16,11 @@ import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.*;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
+import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
+import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -32,7 +36,6 @@ class BucketServiceImplTest {
     private S3Client s3Client;
     @Mock
     private SnsService snsService;
-
     @Mock
     private S3Presigner s3Presigner;
     private BucketService bucketService;
@@ -114,6 +117,22 @@ class BucketServiceImplTest {
         verify(snsService).notifyFileUploaded("File uploaded to bucket : " + bucketName);
     }
 
+    @Test
+    void generateFileUrl() throws MalformedURLException {
+        String bucketName = "bucket-sample";
+        String key = "/file/samplefile.json";
+        String expirationTime = "60"; // minutes
+        String mockUrl = "https://aws.amazonaws.com/";
+
+        PresignedGetObjectRequest presignedGetObjectRequestMock = mock(PresignedGetObjectRequest.class);
+        URL urlMock = new URL(mockUrl);
+        when(presignedGetObjectRequestMock.url()).thenReturn(urlMock);
+        when(s3Presigner.presignGetObject(any(GetObjectPresignRequest.class))).thenReturn(presignedGetObjectRequestMock);
+
+        String presignUrl = bucketService.generateFileUrl(bucketName, key, expirationTime);
+
+        assertThat(presignUrl).isEqualTo(mockUrl);
+    }
     @Test
     void uploadFileToBucket_WhenFileExists_ThrowsFileAlreadyExistsException() {
         String bucketName = "bucket-1";
