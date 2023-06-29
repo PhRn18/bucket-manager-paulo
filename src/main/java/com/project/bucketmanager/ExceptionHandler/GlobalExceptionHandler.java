@@ -67,6 +67,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(status).body(response);
     }
 
+    @ExceptionHandler(ListAllBucketsException.class)
+    public ResponseEntity<Map<String,Object>> handleListAllBucketsException(ListAllBucketsException ex){
+        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+        Map<String,Object> response = buildDefaultErrorMap(ex,status);
+        response.put("Solution", "Please verify the AWS credentials, AWS roles, and AWS STS.");
+        return ResponseEntity.status(status).body(response);
+    }
+
     protected Map<String,Object> buildDefaultErrorMap(Exception ex,HttpStatus status){
         Map<String,Object> response = new HashMap<>();
         response.put("HTTP_STATUS",status);

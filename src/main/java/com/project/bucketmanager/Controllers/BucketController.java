@@ -7,6 +7,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import java.util.List;
 
 @RestController
 @RequestMapping("/bucket")
@@ -16,6 +17,16 @@ public class BucketController {
         this.bucketService = bucketService;
     }
 
+    @GetMapping("/list")
+    public ResponseEntity<List<BucketDetails>> listAllBuckets(){
+        List<BucketDetails> result =  bucketService.listAllBuckets();
+        if(result.isEmpty()){
+            return ResponseEntity
+                    .noContent()
+                    .build();
+        }
+        return ResponseEntity.ok(result);
+    }
     @GetMapping("/{bucketName}")
     public ResponseEntity<BucketContent> listAllBucketContent(@PathVariable String bucketName){
         BucketContent result = bucketService.listAllBucketContent(bucketName);

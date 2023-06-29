@@ -34,6 +34,20 @@ public class BucketServiceImpl implements BucketService {
         this.s3Presigner = s3Presigner;
     }
     @Override
+    @Cacheable("cachedBucketList")
+    public List<BucketDetails> listAllBuckets() {
+        try{
+            ListBucketsResponse listBucketsResponse = s3Client.listBuckets();
+            return listBucketsResponse
+                    .buckets()
+                    .stream()
+                    .map(BucketDetails::new)
+                    .toList();
+        }catch (S3Exception e){
+            throw new ListAllBucketsException("Unable to list all buckets");
+        }
+    }
+    @Override
     @Cacheable("cachedBucketContent")
     public BucketContent listAllBucketContent(String bucketName) {
         validateStringParam(bucketName);
