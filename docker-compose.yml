@@ -3,7 +3,7 @@ services:
     image: localstack/localstack:latest
     container_name: local-aws-services
     environment:
-      - SERVICES=sqs,sns
+      - SERVICES=s3,sns
       - AWS_DEFAULT_REGION=us-east-1
       - EDGE_PORT=4566
     ports:
