@@ -4,6 +4,7 @@ import com.project.bucketmanager.ExceptionHandler.Exceptions.*;
 import com.project.bucketmanager.Models.*;
 import com.project.bucketmanager.Services.BucketService;
 import com.project.bucketmanager.Services.SnsService;
+import com.project.bucketmanager.Validation.ValidateStringParams;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
@@ -49,8 +50,8 @@ public class BucketServiceImpl implements BucketService {
     }
     @Override
     @Cacheable("cachedBucketContent")
+    @ValidateStringParams
     public BucketContent listAllBucketContent(String bucketName) {
-        validateStringParam(bucketName);
         ListObjectsV2Request request = getListObjectsV2Request(bucketName);
 
         try{
@@ -64,15 +65,15 @@ public class BucketServiceImpl implements BucketService {
                 return new BucketContent(keys);
             }
             return new BucketContent();
-        }catch (NoSuchBucketException ex){
+        }catch (S3Exception ex){
             throw new IllegalArgumentException("Bucket does not exist: " + bucketName);
         }
     }
 
     @Override
     @Cacheable("cachedContentDetails")
+    @ValidateStringParams
     public ContentDetails getBucketContentDetailsByKey(String bucketName,String key) {
-        validateStringParam(bucketName);
         ListObjectsV2Request request = getListObjectsV2Request(bucketName);
 
         try{
@@ -94,8 +95,8 @@ public class BucketServiceImpl implements BucketService {
 
     @Override
     @CacheEvict(value = "cachedBucketContent", allEntries = true)
+    @ValidateStringParams
     public void updateFileToBucket(MultipartFile file, String bucketName) {
-        validateStringParam(bucketName);
         if(file.isEmpty()){
             throw new EmptyFileException("Empty file!");
         }
@@ -124,9 +125,8 @@ public class BucketServiceImpl implements BucketService {
     }
 
     @Override
+    @ValidateStringParams
     public FileDownloaded downloadFileFromBucket(String bucketName, String key) {
-        validateStringParam(bucketName);
-        validateStringParam(key);
         GetObjectRequest getObjectRequest = getObjectRequest(bucketName, key);
         try {
             ResponseInputStream<GetObjectResponse> responseInputStream = s3Client.getObject(getObjectRequest);
@@ -139,10 +139,8 @@ public class BucketServiceImpl implements BucketService {
     }
 
     @Override
+    @ValidateStringParams
     public String generateFileUrl(String bucketName, String key,String expirationTime) {
-        validateStringParam(bucketName);
-        validateStringParam(key);
-
         GetObjectRequest getObjectRequest = getObjectRequest(bucketName, key);
 
         GetObjectPresignRequest getObjectPresignRequest = GetObjectPresignRequest.builder()
@@ -162,10 +160,8 @@ public class BucketServiceImpl implements BucketService {
             @CacheEvict(value = "cachedBucketContent", allEntries = true),
             @CacheEvict(value = "cachedContentDetails", allEntries = true)
     })
+    @ValidateStringParams
     public void deleteFileFromBucket(String bucketName, String key) {
-        validateStringParam(bucketName);
-        validateStringParam(key);
-
         DeleteObjectRequest deleteObjectRequest = getDeleteObjectRequest(bucketName,key);
         ListObjectsV2Request listObjectsV2Request = getListObjectsV2Request(bucketName);
 
@@ -205,12 +201,6 @@ public class BucketServiceImpl implements BucketService {
         return ListObjectsV2Request.builder()
                 .bucket(bucketName)
                 .build();
-    }
-    private static void validateStringParam(String param) {
-        boolean invalidBucketName = param == null || param.isEmpty() ;
-        if (invalidBucketName) {
-            throw new IllegalArgumentException("Param must not be null or empty");
-        }
     }
 
 }
