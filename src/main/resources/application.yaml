@@ -1,0 +1,35 @@
+# Configurações do banco de dados PostgreSQL
+#spring.datasource.url=jdbc:postgresql://localhost:3333/bucketmanager
+#spring.datasource.username=postgres
+#spring.datasource.password=postgres
+#spring.datasource.driver-class-name=org.postgresql.Driver
+
+spring:
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+      - org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
+    hibernate:
+      ddl-auto: none
+
+aws:
+  bucket:
+    region: us-east-1
+    names:
+      - bucket-test
+
+  enable:
+    notification: true
+    auto-create-buckets: false
+
+  sns:
+    region: us-east-1
+    file:
+      deleted:
+        arn: adsdsasdasda
+      uploaded:
+        arn: saddsasaddsa

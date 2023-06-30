@@ -1,0 +1,18 @@
+aws:
+  bucket:
+    region: us-east-1
+    endpoint: http://localhost:4566/
+    names: bucket-test1, bucket-test2
+
+  enable:
+    notification: false
+    auto-create-buckets: true
+
+  sns:
+    region: us-east-1
+    endpoint: http://localhost:4566/
+    file:
+      deleted:
+        arn: adsdsasdasda
+      uploaded:
+        arn: dasdsaasddsa
