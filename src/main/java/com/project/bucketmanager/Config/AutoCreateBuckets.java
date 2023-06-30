@@ -3,6 +3,7 @@ package com.project.bucketmanager.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -23,9 +24,14 @@ public class AutoCreateBuckets {
     @Autowired
     private S3Client s3Client;
 
+    @Value("${aws.enable.autoCreateBuckets}")
+    private boolean autoCreateBuckets;
+
     @PostConstruct
-    @ConditionalOnProperty(value = "aws.enable.auto-create-buckets", havingValue = "true")
     public void createBuckets(){
+        if(!autoCreateBuckets){
+            return;
+        }
         String[] names = environment.getRequiredProperty("aws.bucket.names", String[].class);
 
         ListBucketsRequest listBucketsRequest = ListBucketsRequest.builder().build();

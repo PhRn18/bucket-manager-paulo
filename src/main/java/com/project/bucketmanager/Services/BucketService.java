@@ -13,5 +13,6 @@ public interface BucketService {
     FileDownloaded downloadFileFromBucket(String bucketName, String key);
     String generateFileUrl(String bucketName,String key,String expirationTime);
     SearchFileResult searchFile(String bucketName,String searchString);
+    ListAllFoldersResult listAllFolders(String bucketName);
     void deleteFileFromBucket(String bucketName,String key);
 }

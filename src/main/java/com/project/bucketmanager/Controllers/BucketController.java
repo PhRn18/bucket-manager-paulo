@@ -94,6 +94,14 @@ public class BucketController {
         return ResponseEntity.ok(result);
     }
 
+    @GetMapping("/folders/{bucketName}")
+    public ResponseEntity<ListAllFoldersResult> listAllFolders(
+            @PathVariable String bucketName
+    ){
+        ListAllFoldersResult result = bucketService.listAllFolders(bucketName);
+        return ResponseEntity.ok(result);
+    }
+
     @DeleteMapping("/{bucketName}")
     public ResponseEntity<?> deleteBucketFile(
             @PathVariable String bucketName,

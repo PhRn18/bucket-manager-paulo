@@ -20,8 +20,7 @@ import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignReques
 
 import java.io.*;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -186,6 +185,30 @@ public class BucketServiceImpl implements BucketService {
     }
 
     @Override
+    @ValidateStringParams
+    public ListAllFoldersResult listAllFolders(String bucketName) {
+        ListObjectsV2Request listObjectsV2Request = getListObjectsV2Request(bucketName);
+        try {
+            List<S3Object> contents = s3Client.listObjectsV2(listObjectsV2Request).contents();
+
+            if (contents.isEmpty()) {
+                return ListAllFoldersResult.buildEmptyResponse();
+            }
+
+            Set<String> foldersSet = contents
+                    .stream()
+                    .map(S3Object::key)
+                    .map(BucketServiceImpl::getFolderFromKey)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toCollection(LinkedHashSet::new));
+
+            return new ListAllFoldersResult(foldersSet, foldersSet.size());
+        } catch (S3Exception e) {
+            throw new IllegalArgumentException("Bucket does not exist: " + bucketName);
+        }
+    }
+
+    @Override
     @Caching(evict = {
             @CacheEvict(value = "cachedBucketContent", allEntries = true),
             @CacheEvict(value = "cachedContentDetails", allEntries = true)
@@ -212,6 +235,13 @@ public class BucketServiceImpl implements BucketService {
         } catch (S3Exception e) {
             throw new FileDeleteException("Unable to delete file from S3 bucket!", e);
         }
+    }
+    private static String getFolderFromKey(String key) {
+        int lastSlashIndex = key.lastIndexOf('/');
+        if (lastSlashIndex > 0) {
+            return key.substring(0, lastSlashIndex);
+        }
+        return null;
     }
 
     private static GetObjectRequest getObjectRequest(String bucketName,String key){

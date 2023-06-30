@@ -19,12 +19,11 @@ spring:
 aws:
   bucket:
     region: us-east-1
-    names:
-      - bucket-test
+    names: bucket-test1, bucket-test2
 
   enable:
     notification: true
-    auto-create-buckets: false
+    autoCreateBuckets: false
 
   sns:
     region: us-east-1

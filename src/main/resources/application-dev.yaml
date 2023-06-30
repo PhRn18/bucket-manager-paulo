@@ -6,7 +6,7 @@ aws:
 
   enable:
     notification: false
-    auto-create-buckets: true
+    autoCreateBuckets: true
 
   sns:
     region: us-east-1
