@@ -20,6 +20,7 @@ import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignReques
 
 import java.io.*;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -152,6 +153,35 @@ public class BucketServiceImpl implements BucketService {
             return s3Presigner.presignGetObject(getObjectPresignRequest).url().toString();
         }catch (S3Exception e){
             throw new PresignUrlException("Unable to generate the file url");
+        }
+    }
+
+    @Override
+    @ValidateStringParams
+    public SearchFileResult searchFile(String bucketName, String searchString) {
+        ListObjectsV2Request request = getListObjectsV2Request(bucketName);
+
+        try{
+            ListObjectsV2Response listObjectsV2Response = s3Client.listObjectsV2(request);
+            if(listObjectsV2Response!=null){
+                List<S3Object> keys = listObjectsV2Response.contents();
+                List<S3Object> filteredFiles = keys
+                        .stream()
+                        .filter(s3Object -> s3Object.key().contains(searchString))
+                        .toList();
+
+                if(filteredFiles.isEmpty()){
+                    throw new ContentNotFoundException("Unable to find file with key: "+searchString);
+                }
+
+                List<String> fileKeys = filteredFiles.stream().map(S3Object::key).toList();
+                boolean singleResult = fileKeys.size() == 1;
+                boolean multipleResults = fileKeys.size() > 1;
+                return new SearchFileResult(fileKeys,singleResult,multipleResults);
+            }
+            throw new ContentNotFoundException("Unable to find file with key: "+searchString);
+        }catch (S3Exception ex){
+            throw new IllegalArgumentException("Bucket does not exist: " + bucketName);
         }
     }
 

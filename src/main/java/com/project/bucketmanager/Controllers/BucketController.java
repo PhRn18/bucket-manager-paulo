@@ -85,6 +85,15 @@ public class BucketController {
         return ResponseEntity.ok(url);
     }
 
+    @GetMapping("/search/{bucketName}")
+    public ResponseEntity<SearchFileResult> searchFile(
+            @PathVariable String bucketName,
+            @RequestParam String searchString
+    ){
+        SearchFileResult result = bucketService.searchFile(bucketName, searchString);
+        return ResponseEntity.ok(result);
+    }
+
     @DeleteMapping("/{bucketName}")
     public ResponseEntity<?> deleteBucketFile(
             @PathVariable String bucketName,

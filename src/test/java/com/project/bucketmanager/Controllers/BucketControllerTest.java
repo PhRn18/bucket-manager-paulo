@@ -15,6 +15,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.multipart.MultipartFile;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -23,6 +24,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.io.ByteArrayInputStream;
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -158,6 +160,30 @@ class BucketControllerTest {
         assertEquals(responseBody,mockUrl);
 
     }
+
+    @Test
+    void searchFileByCharSequence() throws Exception {
+        String bucketName = "bucket-name1";
+        String searchString = ".png";
+
+        List<String> keys = new ArrayList<>();
+        keys.add("key1");
+        keys.add("key2");
+        keys.add("key3");
+
+        SearchFileResult mockSearchFileResult = new SearchFileResult(keys,true,false);
+
+        when(bucketService.searchFile(anyString(),anyString())).thenReturn(mockSearchFileResult);
+
+        mockMvc.perform(
+                get("/bucket/{bucketName}", bucketName)
+                        .queryParam("searchString", searchString)
+        )
+                .andExpect(status().isOk())
+                .andReturn();
+    }
+
+
 
     @Test
     void deleteBucketFile() throws Exception {

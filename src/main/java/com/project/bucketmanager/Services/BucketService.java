@@ -1,9 +1,6 @@
 package com.project.bucketmanager.Services;
 
-import com.project.bucketmanager.Models.BucketContent;
-import com.project.bucketmanager.Models.BucketDetails;
-import com.project.bucketmanager.Models.ContentDetails;
-import com.project.bucketmanager.Models.FileDownloaded;
+import com.project.bucketmanager.Models.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -15,5 +12,6 @@ public interface BucketService {
     void updateFileToBucket(MultipartFile file,String bucketName);
     FileDownloaded downloadFileFromBucket(String bucketName, String key);
     String generateFileUrl(String bucketName,String key,String expirationTime);
+    SearchFileResult searchFile(String bucketName,String searchString);
     void deleteFileFromBucket(String bucketName,String key);
 }
