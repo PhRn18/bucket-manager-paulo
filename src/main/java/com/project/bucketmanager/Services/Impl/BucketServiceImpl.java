@@ -209,6 +209,57 @@ public class BucketServiceImpl implements BucketService {
     }
 
     @Override
+    @ValidateStringParams
+    public ListAllFileExtensions listAllFileExtensions(String bucketName) {
+        ListObjectsV2Request listObjectsV2Request = getListObjectsV2Request(bucketName);
+        try {
+            List<S3Object> contents = s3Client.listObjectsV2(listObjectsV2Request).contents();
+
+            if (contents.isEmpty()) {
+                return ListAllFileExtensions.buildEmptyResponse();
+            }
+
+            Set<String> extensionsSet = contents
+                    .stream()
+                    .map(S3Object::key)
+                    .map(BucketServiceImpl::getExtensionFromKey)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toCollection(LinkedHashSet::new));
+
+            return new ListAllFileExtensions(extensionsSet, extensionsSet.size());
+        } catch (S3Exception e) {
+            throw new IllegalArgumentException("Bucket does not exist: " + bucketName);
+        }
+    }
+
+    @Override
+    @ValidateStringParams
+    public CountExtensionOccurrences countExtensionOccurrences(String bucketName, String extension) {
+        ListObjectsV2Request listObjectsV2Request = getListObjectsV2Request(bucketName);
+        try {
+            List<S3Object> contents = s3Client.listObjectsV2(listObjectsV2Request).contents();
+
+            if (contents.isEmpty()) {
+                return CountExtensionOccurrences.buildEmptyResponse();
+            }
+
+            List<String> extensionOccurrences = new ArrayList<>();
+            contents.stream()
+                    .map(S3Object::key)
+                    .forEach(key -> {
+                        String fileExtension = getExtensionFromKey(key);
+                        if (fileExtension != null && fileExtension.equalsIgnoreCase(extension)) {
+                            extensionOccurrences.add(key);
+                        }
+                    });
+
+            return new CountExtensionOccurrences(extension, extensionOccurrences.size(),extensionOccurrences);
+        } catch (S3Exception e) {
+            throw new IllegalArgumentException("Bucket does not exist: " + bucketName);
+        }
+    }
+
+    @Override
     @Caching(evict = {
             @CacheEvict(value = "cachedBucketContent", allEntries = true),
             @CacheEvict(value = "cachedContentDetails", allEntries = true)
@@ -240,6 +291,13 @@ public class BucketServiceImpl implements BucketService {
         int lastSlashIndex = key.lastIndexOf('/');
         if (lastSlashIndex > 0) {
             return key.substring(0, lastSlashIndex);
+        }
+        return null;
+    }
+    private static String getExtensionFromKey(String key) {
+        int lastDotIndex = key.lastIndexOf(".");
+        if (lastDotIndex != -1 && lastDotIndex < key.length() - 1) {
+            return key.substring(lastDotIndex + 1);
         }
         return null;
     }

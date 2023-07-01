@@ -101,6 +101,22 @@ public class BucketController {
         ListAllFoldersResult result = bucketService.listAllFolders(bucketName);
         return ResponseEntity.ok(result);
     }
+    @GetMapping("/fileExtensions/{bucketName}")
+    public ResponseEntity<ListAllFileExtensions> listAllFileExtensions(
+            @PathVariable String bucketName
+    ){
+        ListAllFileExtensions result = bucketService.listAllFileExtensions(bucketName);
+        return ResponseEntity.ok(result);
+    }
+
+    @GetMapping("/fileExtensions/count/{bucketName}/{extension}")
+    public ResponseEntity<?> countExtensionOccurrences(
+            @PathVariable String bucketName,
+            @PathVariable String extension
+    ){
+        CountExtensionOccurrences result = bucketService.countExtensionOccurrences(bucketName,extension);
+        return ResponseEntity.ok(result);
+    }
 
     @DeleteMapping("/{bucketName}")
     public ResponseEntity<?> deleteBucketFile(
