@@ -210,6 +210,37 @@ public class BucketServiceImpl implements BucketService {
 
     @Override
     @ValidateStringParams
+    public FoldersSize listAllFoldersSize(String bucketName) {
+        ListObjectsV2Request listObjectsV2Request = getListObjectsV2Request(bucketName);
+        try {
+            List<S3Object> contents = s3Client.listObjectsV2(listObjectsV2Request).contents();
+
+            if (contents.isEmpty()) {
+                return FoldersSize.buildEmptyResponse();
+            }
+
+            FoldersSize foldersSize = new FoldersSize();
+
+            contents.forEach(s3Object -> {
+                String objectKey = s3Object.key();
+                String folder = getFolderFromKey(objectKey);
+                if (folder != null) {
+                    double objectSize = s3Object.size();
+                    foldersSize.addFolder(folder, String.valueOf(objectSize));
+                    foldersSize.setTotalSize(foldersSize.getTotalSize() + objectSize);
+                }
+            });
+
+            foldersSize.setNumberOfFolders(foldersSize.getFolders().size());
+
+            return foldersSize;
+        } catch (S3Exception e) {
+            throw new IllegalArgumentException("Bucket does not exist: " + bucketName);
+        }
+    }
+
+    @Override
+    @ValidateStringParams
     public ListAllFileExtensions listAllFileExtensions(String bucketName) {
         ListObjectsV2Request listObjectsV2Request = getListObjectsV2Request(bucketName);
         try {

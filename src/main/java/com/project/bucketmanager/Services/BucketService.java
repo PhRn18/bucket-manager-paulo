@@ -14,6 +14,7 @@ public interface BucketService {
     String generateFileUrl(String bucketName,String key,String expirationTime);
     SearchFileResult searchFile(String bucketName,String searchString);
     ListAllFoldersResult listAllFolders(String bucketName);
+    FoldersSize listAllFoldersSize(String bucketName);
     ListAllFileExtensions listAllFileExtensions(String bucketName);
     CountExtensionOccurrences countExtensionOccurrences(String bucketName,String extension);
     void deleteFileFromBucket(String bucketName,String key);

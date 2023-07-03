@@ -101,6 +101,16 @@ public class BucketController {
         ListAllFoldersResult result = bucketService.listAllFolders(bucketName);
         return ResponseEntity.ok(result);
     }
+
+    @GetMapping("/folders/listSize/{bucketName}")
+    public ResponseEntity<FoldersSize> listAllFoldersSize(
+            @PathVariable String bucketName
+    ){
+        FoldersSize foldersSize = bucketService.listAllFoldersSize(bucketName);
+
+        return ResponseEntity.ok(foldersSize);
+    }
+
     @GetMapping("/fileExtensions/{bucketName}")
     public ResponseEntity<ListAllFileExtensions> listAllFileExtensions(
             @PathVariable String bucketName
