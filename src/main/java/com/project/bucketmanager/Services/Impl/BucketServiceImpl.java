@@ -157,14 +157,15 @@ public class BucketServiceImpl implements BucketService {
 
                 try (ByteArrayInputStream compressedInputStream = new ByteArrayInputStream(compressedBytes)) {
                     int compressedFileSize = compressedBytes.length;
+                    String compressedFileName = getFileNameWithoutExtension(fileName)+".gz";
                     RequestBody fileInputStream = RequestBody.fromInputStream(compressedInputStream, compressedFileSize);
                     s3Client.putObject(PutObjectRequest.builder()
                             .bucket(bucketName)
-                            .key(fileName)
-                            .contentType(file.getContentType())
+                            .key(compressedFileName)
+                            .contentType("application/gzip")
                             .build(), fileInputStream);
                     snsService.notifyFileUploaded("File uploaded to bucket: " + bucketName);
-                    return new CompressedFileUpdate(file.getSize(), compressedFileSize);
+                    return new CompressedFileUpdate(compressedFileName,file.getSize(), compressedFileSize);
                 }
             }
         } catch (IOException e) {
@@ -380,6 +381,14 @@ public class BucketServiceImpl implements BucketService {
         }
         return null;
     }
+    private static String getFileNameWithoutExtension(String fileName) {
+        int lastDotIndex = fileName.lastIndexOf(".");
+        if (lastDotIndex != -1) {
+            return fileName.substring(0, lastDotIndex);
+        }
+        return fileName;
+    }
+
 
     private static GetObjectRequest getObjectRequest(String bucketName,String key){
         return GetObjectRequest

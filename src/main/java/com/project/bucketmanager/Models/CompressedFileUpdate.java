@@ -9,7 +9,8 @@ public class CompressedFileUpdate {
     public CompressedFileUpdate() {
     }
 
-    public CompressedFileUpdate(long originalFileSize, long compressedFileSize) {
+    public CompressedFileUpdate(String fileName,long originalFileSize, long compressedFileSize) {
+        this.fileName=fileName;
         this.originalFileSize = originalFileSize;
         this.compressedFileSize = compressedFileSize;
         double rate = (double) originalFileSize / compressedFileSize;
