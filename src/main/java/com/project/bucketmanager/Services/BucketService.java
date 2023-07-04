@@ -10,6 +10,7 @@ public interface BucketService {
     BucketContent listAllBucketContent(String bucketName);
     ContentDetails getBucketContentDetailsByKey(String bucketName,String key);
     void updateFileToBucket(MultipartFile file,String bucketName);
+    CompressedFileUpdate compressAndUpdateFileToBucket(MultipartFile file,String bucketName);
     FileDownloaded downloadFileFromBucket(String bucketName, String key);
     String generateFileUrl(String bucketName,String key,String expirationTime);
     SearchFileResult searchFile(String bucketName,String searchString);

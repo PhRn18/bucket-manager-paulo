@@ -22,7 +22,7 @@ aws:
     names: bucket-test1, bucket-test2
 
   enable:
-    notification: true
+    notification: false
     autoCreateBuckets: false
 
   sns:

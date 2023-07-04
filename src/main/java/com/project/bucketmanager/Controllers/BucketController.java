@@ -52,6 +52,15 @@ public class BucketController {
         return ResponseEntity.status(HttpStatus.CREATED).body(fileUploaded);
     }
 
+    @PostMapping("/compress/{bucketName}")
+    public ResponseEntity<CompressedFileUpdate> compressedFileUpdateToBucket(
+            @RequestParam("file") MultipartFile file,
+            @PathVariable String bucketName
+    ){
+        CompressedFileUpdate result = bucketService.compressAndUpdateFileToBucket(file, bucketName);
+        return ResponseEntity.status(HttpStatus.CREATED).body(result);
+    }
+
     @GetMapping("/download/{bucketName}/{contentDisposition}")
     public ResponseEntity<Resource> downloadFileFromBucket(
             @PathVariable String bucketName,

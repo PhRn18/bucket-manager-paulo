@@ -10,6 +10,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StreamUtils;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -22,6 +23,7 @@ import java.io.*;
 import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.zip.GZIPOutputStream;
 
 @Service
 public class BucketServiceImpl implements BucketService {
@@ -118,6 +120,52 @@ public class BucketServiceImpl implements BucketService {
                         .contentType(file.getContentType())
                         .build(), fileInputStream);
                 snsService.notifyFileUploaded("File uploaded to bucket : "+bucketName);
+            }
+        } catch (IOException e) {
+            throw new FileUploadException("Unable to upload the file: " + e.getMessage());
+        }
+    }
+
+    @Override
+    @CacheEvict(value = "cachedBucketContent", allEntries = true)
+    @ValidateStringParams
+    public CompressedFileUpdate compressAndUpdateFileToBucket(MultipartFile file, String bucketName) {
+        if (file.isEmpty()) {
+            throw new EmptyFileException("Empty file!");
+        }
+
+        String fileName = file.getOriginalFilename();
+        try (InputStream inputStream = file.getInputStream()) {
+            HeadObjectRequest headObjectRequest = HeadObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(fileName)
+                    .build();
+            try {
+                s3Client.headObject(headObjectRequest);
+                throw new FileAlreadyExistsException("File already exists in the bucket: " + fileName);
+            } catch (NoSuchKeyException e) {
+                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
+                try (GZIPOutputStream gzipOutputStream = new GZIPOutputStream(outputStream)) {
+                    StreamUtils.copy(inputStream, gzipOutputStream);
+                } catch (IOException ex) {
+                    throw new FileUploadException("Error compressing the file: " + ex.getMessage());
+                }
+
+
+                byte[] compressedBytes = outputStream.toByteArray();
+
+                try (ByteArrayInputStream compressedInputStream = new ByteArrayInputStream(compressedBytes)) {
+                    int compressedFileSize = compressedBytes.length;
+                    RequestBody fileInputStream = RequestBody.fromInputStream(compressedInputStream, compressedFileSize);
+                    s3Client.putObject(PutObjectRequest.builder()
+                            .bucket(bucketName)
+                            .key(fileName)
+                            .contentType(file.getContentType())
+                            .build(), fileInputStream);
+                    snsService.notifyFileUploaded("File uploaded to bucket: " + bucketName);
+                    return new CompressedFileUpdate(file.getSize(), compressedFileSize);
+                }
             }
         } catch (IOException e) {
             throw new FileUploadException("Unable to upload the file: " + e.getMessage());
