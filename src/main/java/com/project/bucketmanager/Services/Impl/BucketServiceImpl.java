@@ -4,6 +4,7 @@ import com.project.bucketmanager.ExceptionHandler.Exceptions.*;
 import com.project.bucketmanager.Models.*;
 import com.project.bucketmanager.Services.BucketService;
 import com.project.bucketmanager.Services.SnsService;
+import com.project.bucketmanager.Validation.ValidateMultipartFile;
 import com.project.bucketmanager.Validation.ValidateStringParams;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -98,11 +99,8 @@ public class BucketServiceImpl implements BucketService {
     @Override
     @CacheEvict(value = "cachedBucketContent", allEntries = true)
     @ValidateStringParams
+    @ValidateMultipartFile
     public void updateFileToBucket(MultipartFile file, String bucketName) {
-        if(file.isEmpty()){
-            throw new EmptyFileException("Empty file!");
-        }
-
         String fileName = file.getOriginalFilename();
         try (InputStream inputStream = file.getInputStream()) {
             HeadObjectRequest headObjectRequest = HeadObjectRequest.builder()
@@ -129,11 +127,8 @@ public class BucketServiceImpl implements BucketService {
     @Override
     @CacheEvict(value = "cachedBucketContent", allEntries = true)
     @ValidateStringParams
+    @ValidateMultipartFile
     public CompressedFileUpdate compressAndUpdateFileToBucket(MultipartFile file, String bucketName) {
-        if (file.isEmpty()) {
-            throw new EmptyFileException("Empty file!");
-        }
-
         String fileName = file.getOriginalFilename();
         try (InputStream inputStream = file.getInputStream()) {
             HeadObjectRequest headObjectRequest = HeadObjectRequest.builder()
