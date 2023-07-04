@@ -144,16 +144,7 @@ public class BucketServiceImpl implements BucketService {
                 s3Client.headObject(headObjectRequest);
                 throw new FileAlreadyExistsException("File already exists in the bucket: " + fileName);
             } catch (NoSuchKeyException e) {
-                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-
-                try (GZIPOutputStream gzipOutputStream = new GZIPOutputStream(outputStream)) {
-                    StreamUtils.copy(inputStream, gzipOutputStream);
-                } catch (IOException ex) {
-                    throw new FileUploadException("Error compressing the file: " + ex.getMessage());
-                }
-
-
-                byte[] compressedBytes = outputStream.toByteArray();
+                byte[] compressedBytes = getCompressedBytesUsingGZIP(inputStream);
 
                 try (ByteArrayInputStream compressedInputStream = new ByteArrayInputStream(compressedBytes)) {
                     int compressedFileSize = compressedBytes.length;
@@ -366,6 +357,18 @@ public class BucketServiceImpl implements BucketService {
         } catch (S3Exception e) {
             throw new FileDeleteException("Unable to delete file from S3 bucket!", e);
         }
+    }
+    private static byte[] getCompressedBytesUsingGZIP(InputStream inputStream) {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+
+        try (GZIPOutputStream gzipOutputStream = new GZIPOutputStream(outputStream)) {
+            StreamUtils.copy(inputStream, gzipOutputStream);
+        } catch (IOException ex) {
+            throw new FileUploadException("Error compressing the file: " + ex.getMessage());
+        }
+
+
+        return outputStream.toByteArray();
     }
     private static String getFolderFromKey(String key) {
         int lastSlashIndex = key.lastIndexOf('/');
