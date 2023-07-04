@@ -4,6 +4,7 @@ O projeto foi desenvolvido utilizando o framework Spring Boot na linguagem de pr
 
 A documentação detalhada dos endpoints pode ser encontrada na URL do Swagger: /swagger-ui.html.
 
+
 ## Endpoints
 
 - Base URL: `/bucket`
