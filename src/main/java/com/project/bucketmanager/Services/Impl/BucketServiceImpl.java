@@ -25,6 +25,7 @@ import java.io.*;
 import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import static com.project.bucketmanager.Utils.FileUtil.*;
@@ -135,7 +136,7 @@ public class BucketServiceImpl implements BucketService {
     @ValidateMultipartFile
     public CompressedFileUpdate compressAndUpdateFileToBucket(MultipartFile file, String bucketName) {
         String fileName = file.getOriginalFilename();
-        String compressedFileName = getFileNameWithoutExtension(fileName)+".gz";
+        String compressedFileName = getFileNameWithoutExtension(fileName)+"-"+getExtensionFromKey(fileName)+".gz";
         try (InputStream inputStream = file.getInputStream()) {
             HeadObjectRequest headObjectRequest = HeadObjectRequest.builder()
                     .bucket(bucketName)
@@ -171,8 +172,18 @@ public class BucketServiceImpl implements BucketService {
         try {
             ResponseInputStream<GetObjectResponse> responseInputStream = s3Client.getObject(getObjectRequest);
             String contentType = responseInputStream.response().contentType();
-            InputStreamResource inputStreamResource = new InputStreamResource(responseInputStream);
-            return new FileDownloaded(inputStreamResource,contentType);
+            InputStreamResource inputStreamResource;
+            String originalFileExtension = getOriginalFileExtension(key);
+            if("application/gzip".equals(contentType)){
+                String oldFileName = key.split("-")[0]+"."+originalFileExtension;
+                GZIPInputStream gzipInputStream = new GZIPInputStream(responseInputStream);
+                inputStreamResource = new InputStreamResource(gzipInputStream);
+                contentType = "application/"+originalFileExtension;
+                return new FileDownloaded(inputStreamResource,contentType,oldFileName);
+            }else{
+                inputStreamResource = new InputStreamResource(responseInputStream);
+                return new FileDownloaded(inputStreamResource,contentType,key);
+            }
         } catch (Exception e) {
             throw new FileDownloadException("Unable to download S3 file!.", e);
         }

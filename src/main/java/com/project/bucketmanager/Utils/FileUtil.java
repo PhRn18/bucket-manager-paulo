@@ -22,4 +22,15 @@ public class FileUtil {
         }
         return fileName;
     }
+
+    public static String getOriginalFileExtension(String fileName){
+        int dashIndex = fileName.indexOf("-");
+        int dotIndex = fileName.lastIndexOf(".");
+
+        if (dashIndex != -1 && dotIndex != -1 && dotIndex > dashIndex) {
+            return fileName.substring(dashIndex + 1, dotIndex);
+        }
+
+        return null;
+    }
 }

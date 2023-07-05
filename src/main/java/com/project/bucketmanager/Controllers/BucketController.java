@@ -79,7 +79,7 @@ public class BucketController {
         InputStreamResource inputStreamResource = fileDownloaded.getInputStreamResource();
 
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentDisposition(ContentDisposition.builder(contentDispositionValue).filename(key).build());
+        headers.setContentDisposition(ContentDisposition.builder(contentDispositionValue).filename(fileDownloaded.getFileName()).build());
         headers.setContentType(MediaType.parseMediaType(contentType));
         return new ResponseEntity<>(inputStreamResource, headers, HttpStatus.OK);
     }

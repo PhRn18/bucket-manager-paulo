@@ -100,7 +100,8 @@ class BucketControllerTest {
 
         FileDownloaded fileDownloaded = new FileDownloaded(
                 new InputStreamResource(new ByteArrayInputStream("content".getBytes())),
-                "text/plain"
+                "text/plain",
+                key
         );
 
         when(bucketService.downloadFileFromBucket(bucketName, key)).thenReturn(fileDownloaded);
@@ -123,7 +124,8 @@ class BucketControllerTest {
 
         FileDownloaded fileDownloaded = new FileDownloaded(
                 new InputStreamResource(new ByteArrayInputStream("content".getBytes())),
-                "text/plain"
+                "text/plain",
+                key
         );
 
         when(bucketService.downloadFileFromBucket(bucketName, key)).thenReturn(fileDownloaded);
