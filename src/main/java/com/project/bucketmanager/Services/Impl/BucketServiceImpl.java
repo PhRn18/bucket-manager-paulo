@@ -4,6 +4,7 @@ import com.project.bucketmanager.ExceptionHandler.Exceptions.*;
 import com.project.bucketmanager.Models.*;
 import com.project.bucketmanager.Services.BucketService;
 import com.project.bucketmanager.Services.SnsService;
+import com.project.bucketmanager.Utils.FileUtil;
 import com.project.bucketmanager.Validation.ValidateMultipartFile;
 import com.project.bucketmanager.Validation.ValidateStringParams;
 import org.springframework.cache.annotation.CacheEvict;
@@ -25,6 +26,10 @@ import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
+
+import static com.project.bucketmanager.Utils.FileUtil.*;
+import static com.project.bucketmanager.Utils.GzipUtils.getCompressedBytesUsingGZIP;
+import static com.project.bucketmanager.Utils.S3ServiceHelper.*;
 
 @Service
 public class BucketServiceImpl implements BucketService {
@@ -130,20 +135,20 @@ public class BucketServiceImpl implements BucketService {
     @ValidateMultipartFile
     public CompressedFileUpdate compressAndUpdateFileToBucket(MultipartFile file, String bucketName) {
         String fileName = file.getOriginalFilename();
+        String compressedFileName = getFileNameWithoutExtension(fileName)+".gz";
         try (InputStream inputStream = file.getInputStream()) {
             HeadObjectRequest headObjectRequest = HeadObjectRequest.builder()
                     .bucket(bucketName)
-                    .key(fileName)
+                    .key(compressedFileName)
                     .build();
             try {
                 s3Client.headObject(headObjectRequest);
-                throw new FileAlreadyExistsException("File already exists in the bucket: " + fileName);
+                throw new FileAlreadyExistsException("File already exists in the bucket: " + compressedFileName);
             } catch (NoSuchKeyException e) {
                 byte[] compressedBytes = getCompressedBytesUsingGZIP(inputStream);
 
                 try (ByteArrayInputStream compressedInputStream = new ByteArrayInputStream(compressedBytes)) {
                     int compressedFileSize = compressedBytes.length;
-                    String compressedFileName = getFileNameWithoutExtension(fileName)+".gz";
                     RequestBody fileInputStream = RequestBody.fromInputStream(compressedInputStream, compressedFileSize);
                     s3Client.putObject(PutObjectRequest.builder()
                             .bucket(bucketName)
@@ -233,7 +238,7 @@ public class BucketServiceImpl implements BucketService {
             Set<String> foldersSet = contents
                     .stream()
                     .map(S3Object::key)
-                    .map(BucketServiceImpl::getFolderFromKey)
+                    .map(FileUtil::getFolderFromKey)
                     .filter(Objects::nonNull)
                     .collect(Collectors.toCollection(LinkedHashSet::new));
 
@@ -288,7 +293,7 @@ public class BucketServiceImpl implements BucketService {
             Set<String> extensionsSet = contents
                     .stream()
                     .map(S3Object::key)
-                    .map(BucketServiceImpl::getExtensionFromKey)
+                    .map(FileUtil::getExtensionFromKey)
                     .filter(Objects::nonNull)
                     .collect(Collectors.toCollection(LinkedHashSet::new));
 
@@ -352,59 +357,6 @@ public class BucketServiceImpl implements BucketService {
         } catch (S3Exception e) {
             throw new FileDeleteException("Unable to delete file from S3 bucket!", e);
         }
-    }
-    private static byte[] getCompressedBytesUsingGZIP(InputStream inputStream) {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-
-        try (GZIPOutputStream gzipOutputStream = new GZIPOutputStream(outputStream)) {
-            StreamUtils.copy(inputStream, gzipOutputStream);
-        } catch (IOException ex) {
-            throw new FileUploadException("Error compressing the file: " + ex.getMessage());
-        }
-
-
-        return outputStream.toByteArray();
-    }
-    private static String getFolderFromKey(String key) {
-        int lastSlashIndex = key.lastIndexOf('/');
-        if (lastSlashIndex > 0) {
-            return key.substring(0, lastSlashIndex);
-        }
-        return null;
-    }
-    private static String getExtensionFromKey(String key) {
-        int lastDotIndex = key.lastIndexOf(".");
-        if (lastDotIndex != -1 && lastDotIndex < key.length() - 1) {
-            return key.substring(lastDotIndex + 1);
-        }
-        return null;
-    }
-    private static String getFileNameWithoutExtension(String fileName) {
-        int lastDotIndex = fileName.lastIndexOf(".");
-        if (lastDotIndex != -1) {
-            return fileName.substring(0, lastDotIndex);
-        }
-        return fileName;
-    }
-
-
-    private static GetObjectRequest getObjectRequest(String bucketName,String key){
-        return GetObjectRequest
-                .builder()
-                .bucket(bucketName)
-                .key(key)
-                .build();
-    }
-    private static DeleteObjectRequest getDeleteObjectRequest(String bucketName,String key){
-        return DeleteObjectRequest.builder()
-                .bucket(bucketName)
-                .key(key)
-                .build();
-    }
-    private static ListObjectsV2Request getListObjectsV2Request(String bucketName) {
-        return ListObjectsV2Request.builder()
-                .bucket(bucketName)
-                .build();
     }
 
 }
