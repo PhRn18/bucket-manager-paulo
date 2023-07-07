@@ -18,5 +18,6 @@ public interface BucketService {
     FoldersSize listAllFoldersSize(String bucketName);
     ListAllFileExtensions listAllFileExtensions(String bucketName);
     CountExtensionOccurrences countExtensionOccurrences(String bucketName,String extension);
+    void moveFileToAnotherBucket(String sourceBucket,String targetBucket,String key);
     void deleteFileFromBucket(String bucketName,String key);
 }

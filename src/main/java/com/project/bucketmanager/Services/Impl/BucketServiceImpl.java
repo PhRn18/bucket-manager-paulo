@@ -342,6 +342,12 @@ public class BucketServiceImpl implements BucketService {
     }
 
     @Override
+    @ValidateStringParams
+    public void moveFileToAnotherBucket(String sourceBucket, String targetBucket, String key) {
+
+    }
+
+    @Override
     @Caching(evict = {
             @CacheEvict(value = "cachedBucketContent", allEntries = true),
             @CacheEvict(value = "cachedContentDetails", allEntries = true)

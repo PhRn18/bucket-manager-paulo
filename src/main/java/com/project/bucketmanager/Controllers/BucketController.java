@@ -129,12 +129,22 @@ public class BucketController {
     }
 
     @GetMapping("/fileExtensions/count/{bucketName}/{extension}")
-    public ResponseEntity<?> countExtensionOccurrences(
+    public ResponseEntity<CountExtensionOccurrences> countExtensionOccurrences(
             @PathVariable String bucketName,
             @PathVariable String extension
     ){
         CountExtensionOccurrences result = bucketService.countExtensionOccurrences(bucketName,extension);
         return ResponseEntity.ok(result);
+    }
+
+    @PutMapping("/move/{sourceBucket}/{targetBucket}")
+    public ResponseEntity<?> moveFileToAnotherBucket(
+            @PathVariable String sourceBucket,
+            @PathVariable String targetBucket,
+            @RequestParam String key
+    ){
+        bucketService.moveFileToAnotherBucket(sourceBucket,targetBucket,key);
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @DeleteMapping("/{bucketName}")
