@@ -1,38 +1,79 @@
 stages:
-  - build-environment
-  - test
+  - build
+  - compile
+  - codeQuality
+  - unitTest
+  - jar
+  - testJar
+  - pushDockerImage
 
 variables:
-  pgpassword: postgres
-  pguser: postgres
-  databaseName: bucketmanager
+  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
 
-services:
-  - name: postgres:latest
-    alias: postgres
-    variables:
-      POSTGRES_USER: $pguser
-      POSTGRES_PASSWORD: $pgpassword
-    
+image: maven:latest
 
 cache:
   paths:
-    - /var/lib/docker
     - .m2/repository
 
-buildEnvironment:
-  stage: build-environment
-  image: postgres:latest
+build:
+  stage: build
   script:
-    - export PGPASSWORD=$pgpassword
-    - psql -h postgres -U $pguser -c "CREATE DATABASE $databaseName;"
-    - databases=$(psql -h postgres -U $pguser -c "SELECT datname FROM pg_database;" | grep -w $databaseName)
-    - if [[ -z "$databases" ]]; then echo "O banco de dados $databaseName não está na lista.";exit 1; else echo "O banco de dados $databaseName está na lista."; fi
+    - mvn clean install
 
+compile:
+  stage: compile
+  script:
+    - mvn compile
+
+codeQuality:
+  stage: codeQuality
+  script:
+    - mvn checkstyle:checkstyle
+    - cat target/checkstyle-result.xml
+  artifacts:
+    paths:
+      - target/checkstyle-result.xml
 
 test:
-  stage: test
-  image: maven:latest
+  stage: unitTest
   script:
-    - export SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/$databaseName
+    - mvn test
+  artifacts:
+    reports:
+      junit:
+        - target/surefire-reports/TEST-*.xml
 
+buildJar:
+  stage: jar
+  script:
+    - mvn package
+  artifacts: 
+    when: on_success
+    paths:
+      - target/bucket-manager.jar
+
+testJar:
+  stage: testJar
+  image: openjdk:17-alpine
+  script:
+    - cp target/bucket-manager.jar app.jar
+    - java -jar app.jar &
+
+pushDockerImage:
+  stage: pushDockerImage
+  image: docker:20.10.10
+  only:
+    refs:
+      - master
+  cache:
+    paths:
+      - .docker
+  services:
+    - docker:20.10.10-dind   
+  script:
+    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER $CI_REGISTRY --password-stdin
+    - docker pull $CI_REGISTRY_IMAGE:latest || true
+    - docker build --cache-from $CI_REGISTRY_IMAGE:latest --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA --tag $CI_REGISTRY_IMAGE:latest .
+    - docker push $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA
+    - docker push $CI_REGISTRY_IMAGE:latest
