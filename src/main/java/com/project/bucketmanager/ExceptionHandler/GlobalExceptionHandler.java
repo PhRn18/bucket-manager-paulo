@@ -75,6 +75,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(status).body(response);
     }
 
+    @ExceptionHandler(CopyFileException.class)
+    public ResponseEntity<Map<String,Object>> handleCopyFileException(CopyFileException ex){
+        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+        Map<String,Object> response = buildDefaultErrorMap(ex,status);
+        return ResponseEntity.status(status).body(response);
+    }
+
     protected Map<String,Object> buildDefaultErrorMap(Exception ex,HttpStatus status){
         Map<String,Object> response = new HashMap<>();
         response.put("HTTP_STATUS",status);

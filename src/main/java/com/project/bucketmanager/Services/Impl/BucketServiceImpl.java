@@ -342,9 +342,21 @@ public class BucketServiceImpl implements BucketService {
     }
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "cachedBucketContent", allEntries = true),
+            @CacheEvict(value = "cachedContentDetails", allEntries = true)
+    })
     @ValidateStringParams
     public void moveFileToAnotherBucket(String sourceBucket, String targetBucket, String key) {
-
+        CopyObjectRequest copyObjectRequest = getCopyObjectRequest(sourceBucket, targetBucket, key);
+        DeleteObjectRequest deleteObjectRequest = getDeleteObjectRequest(sourceBucket,key);
+        ListObjectsV2Request listObjectsV2Request = getListObjectsV2Request(sourceBucket);
+        try{
+            s3Client.copyObject(copyObjectRequest);
+            performDeleteObject(s3Client,key,deleteObjectRequest,listObjectsV2Request);
+        }catch (S3Exception e){
+            throw new CopyFileException("Unable to move file from "+sourceBucket+" to "+targetBucket);
+        }
     }
 
     @Override
@@ -358,18 +370,7 @@ public class BucketServiceImpl implements BucketService {
         ListObjectsV2Request listObjectsV2Request = getListObjectsV2Request(bucketName);
 
         try {
-            ListObjectsV2Response listObjectsV2Response = s3Client.listObjectsV2(listObjectsV2Request);
-            if(listObjectsV2Response==null){
-                throw new ContentNotFoundException("Unable to list any files - S3 connection ERROR!");
-            }
-            listObjectsV2Response
-                    .contents()
-                    .stream()
-                    .filter(s3Object -> s3Object.key().equals(key))
-                    .findFirst()
-                    .orElseThrow(()->new FileDeleteException("Unable to delete file from S3 bucket - File not found"));
-
-            s3Client.deleteObject(deleteObjectRequest);
+            performDeleteObject(s3Client,key, deleteObjectRequest, listObjectsV2Request);
             snsService.notifyFileDeleted("File name: "+key + "deleted!");
         } catch (S3Exception e) {
             throw new FileDeleteException("Unable to delete file from S3 bucket!", e);
