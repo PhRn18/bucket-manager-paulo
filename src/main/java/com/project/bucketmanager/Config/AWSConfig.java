@@ -1,5 +1,7 @@
 package com.project.bucketmanager.Config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -15,6 +17,7 @@ import java.net.URI;
 
 @Configuration
 public class AWSConfig {
+    private Logger logger = LoggerFactory.getLogger(AWSConfig.class);
 
     @Value("${aws.bucket.region}")
     private String bucketRegion;
@@ -39,16 +42,17 @@ public class AWSConfig {
                 .build();
     }
 
-
     @Bean
     @ConditionalOnProperty(value = "spring.profiles.active", havingValue = "dev")
     public S3Client buildDevS3Client(@Value("${aws.bucket.endpoint}") String bucketEndpoint) {
+        logger.info("Building [DEV] S3 Client");
         return getBuilder().endpointOverride(URI.create(bucketEndpoint)).build();
     }
 
     @Bean
     @ConditionalOnProperty(value = "spring.profiles.active", havingValue = "prod", matchIfMissing = true)
     public S3Client buildProdS3Client() {
+        logger.info("Building [PROD] S3 Client");
         return getBuilder().build();
     }
 

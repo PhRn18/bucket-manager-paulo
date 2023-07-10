@@ -16,7 +16,6 @@ public class BucketController {
     public BucketController(BucketService bucketService) {
         this.bucketService = bucketService;
     }
-
     @GetMapping("/list")
     public ResponseEntity<List<BucketDetails>> listAllBuckets(){
         List<BucketDetails> result =  bucketService.listAllBuckets();

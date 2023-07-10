@@ -1,7 +1,7 @@
 aws:
   bucket:
     region: us-east-1
-    endpoint: http://localhost:4566/
+    endpoint: http://localhost:4566
     names: bucket-test1, bucket-test2
 
   enable:
