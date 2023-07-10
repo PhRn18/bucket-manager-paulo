@@ -46,7 +46,7 @@ class CountExtensionOccurrencesTest {
 
         assertThat(countExtensionOccurrences.getExtension()).isNull();
         assertThat(countExtensionOccurrences.getOccurrences()).isEqualTo(0);
-        assertThat(countExtensionOccurrences.getFileName()).isEmpty();
+        assertThat(countExtensionOccurrences.getFileName()).isNull();
     }
 
 }
