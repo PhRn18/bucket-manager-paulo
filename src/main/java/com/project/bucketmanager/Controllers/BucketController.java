@@ -1,7 +1,10 @@
 package com.project.bucketmanager.Controllers;
 
+import com.project.bucketmanager.Config.AutoCreateBuckets;
 import com.project.bucketmanager.Models.*;
 import com.project.bucketmanager.Services.BucketService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.*;
@@ -12,12 +15,14 @@ import java.util.List;
 @RestController
 @RequestMapping("/bucket")
 public class BucketController {
+    private static final Logger logger = LoggerFactory.getLogger(AutoCreateBuckets.class);
     private final BucketService bucketService;
     public BucketController(BucketService bucketService) {
         this.bucketService = bucketService;
     }
     @GetMapping("/list")
     public ResponseEntity<List<BucketDetails>> listAllBuckets(){
+        logger.info("[BucketController]-Listing all buckets...");
         List<BucketDetails> result =  bucketService.listAllBuckets();
         if(result.isEmpty()){
             return ResponseEntity
@@ -28,6 +33,7 @@ public class BucketController {
     }
     @GetMapping("/{bucketName}")
     public ResponseEntity<BucketContent> listAllBucketContent(@PathVariable String bucketName){
+        logger.info("[BucketController]-Listing all bucket content...");
         BucketContent result = bucketService.listAllBucketContent(bucketName);
         return ResponseEntity.ok(result);
     }
@@ -37,6 +43,7 @@ public class BucketController {
             @PathVariable String bucketName,
             @RequestParam String key
     ){
+        logger.info("[BucketController]-Listing bucket content details...");
         ContentDetails contentDetails = bucketService.getBucketContentDetailsByKey(bucketName,key);
         return ResponseEntity.ok(contentDetails);
     }
@@ -46,6 +53,7 @@ public class BucketController {
             @RequestParam("file")MultipartFile file,
             @PathVariable String bucketName
     ){
+        logger.info("[BucketController]-Uploading file to bucket...");
         bucketService.updateFileToBucket(file,bucketName);
         FileUploaded fileUploaded = new FileUploaded("File uploaded!",file.getSize(),file.getOriginalFilename());
         return ResponseEntity.status(HttpStatus.CREATED).body(fileUploaded);
@@ -56,6 +64,7 @@ public class BucketController {
             @RequestParam("file") MultipartFile file,
             @PathVariable String bucketName
     ){
+        logger.info("[BucketController]-Compressing and uploading file to bucket...");
         CompressedFileUpdate result = bucketService.compressAndUpdateFileToBucket(file, bucketName);
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
@@ -66,6 +75,7 @@ public class BucketController {
             @RequestParam String key,
             @PathVariable(required = false) String contentDisposition
     ){
+        logger.info("[BucketController]-Downloading file from bucket...");
         String contentDispositionValue = "attachment";
         if (contentDisposition != null && !contentDisposition.isEmpty()) {
             if (!contentDisposition.equals("inline") && !contentDisposition.equals("attachment")) {
@@ -89,6 +99,7 @@ public class BucketController {
             @RequestParam String key,
             @PathVariable String expirationTime
     ){
+        logger.info("[BucketController]-Generating file url...");
         String url = bucketService.generateFileUrl(bucketName,key,expirationTime);
         return ResponseEntity.ok(url);
     }
@@ -98,6 +109,7 @@ public class BucketController {
             @PathVariable String bucketName,
             @RequestParam String searchString
     ){
+        logger.info("[BucketController]-Searching file...");
         SearchFileResult result = bucketService.searchFile(bucketName, searchString);
         return ResponseEntity.ok(result);
     }
@@ -106,6 +118,7 @@ public class BucketController {
     public ResponseEntity<ListAllFoldersResult> listAllFolders(
             @PathVariable String bucketName
     ){
+        logger.info("[BucketController]-Listing all folders...");
         ListAllFoldersResult result = bucketService.listAllFolders(bucketName);
         return ResponseEntity.ok(result);
     }
@@ -114,6 +127,7 @@ public class BucketController {
     public ResponseEntity<FoldersSize> listAllFoldersSize(
             @PathVariable String bucketName
     ){
+        logger.info("[BucketController]-Listing all folders size...");
         FoldersSize foldersSize = bucketService.listAllFoldersSize(bucketName);
 
         return ResponseEntity.ok(foldersSize);
@@ -123,6 +137,7 @@ public class BucketController {
     public ResponseEntity<ListAllFileExtensions> listAllFileExtensions(
             @PathVariable String bucketName
     ){
+        logger.info("[BucketController]-Listing all file extensions...");
         ListAllFileExtensions result = bucketService.listAllFileExtensions(bucketName);
         return ResponseEntity.ok(result);
     }
@@ -132,6 +147,7 @@ public class BucketController {
             @PathVariable String bucketName,
             @PathVariable String extension
     ){
+        logger.info("[BucketController]-Couting extension occurrences...");
         CountExtensionOccurrences result = bucketService.countExtensionOccurrences(bucketName,extension);
         return ResponseEntity.ok(result);
     }
@@ -142,6 +158,7 @@ public class BucketController {
             @PathVariable String targetBucket,
             @RequestParam String key
     ){
+        logger.info("[BucketController]-Moving file to another bucket...");
         bucketService.moveFileToAnotherBucket(sourceBucket,targetBucket,key);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
@@ -151,6 +168,7 @@ public class BucketController {
             @PathVariable String bucketName,
             @RequestParam String key
     ){
+        logger.warn("[BucketController]-Deleting file...");
         bucketService.deleteFileFromBucket(bucketName, key);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }

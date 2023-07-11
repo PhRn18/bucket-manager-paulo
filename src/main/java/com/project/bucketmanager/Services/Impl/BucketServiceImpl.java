@@ -1,5 +1,6 @@
 package com.project.bucketmanager.Services.Impl;
 
+import com.project.bucketmanager.Config.AutoCreateBuckets;
 import com.project.bucketmanager.ExceptionHandler.Exceptions.*;
 import com.project.bucketmanager.Models.*;
 import com.project.bucketmanager.Services.BucketService;
@@ -7,12 +8,13 @@ import com.project.bucketmanager.Services.SnsService;
 import com.project.bucketmanager.Utils.FileUtil;
 import com.project.bucketmanager.Validation.ValidateMultipartFile;
 import com.project.bucketmanager.Validation.ValidateStringParams;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StreamUtils;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -26,7 +28,6 @@ import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
 import static com.project.bucketmanager.Utils.FileUtil.*;
 import static com.project.bucketmanager.Utils.GzipUtils.getCompressedBytesUsingGZIP;
@@ -34,6 +35,7 @@ import static com.project.bucketmanager.Utils.S3ServiceHelper.*;
 
 @Service
 public class BucketServiceImpl implements BucketService {
+    private static final Logger logger = LoggerFactory.getLogger(AutoCreateBuckets.class);
     private final S3Client s3Client;
     private final SnsService snsService;
 
@@ -54,6 +56,7 @@ public class BucketServiceImpl implements BucketService {
                     .map(BucketDetails::new)
                     .toList();
         }catch (S3Exception e){
+            logger.error("[BucketService]-ERROR listing all buckets");
             throw new ListAllBucketsException("Unable to list all buckets");
         }
     }
@@ -75,6 +78,7 @@ public class BucketServiceImpl implements BucketService {
             }
             return new BucketContent();
         }catch (S3Exception ex){
+            logger.error("[BucketService]-ERROR listing all bucket content");
             throw new IllegalArgumentException("Bucket does not exist: " + bucketName);
         }
     }
@@ -98,6 +102,7 @@ public class BucketServiceImpl implements BucketService {
             }
             return new ContentDetails();
         }catch (NoSuchBucketException ex){
+            logger.error("[BucketService]-ERROR getting bucket content details by key");
             throw new IllegalArgumentException("Bucket does not exist: " + bucketName);
         }
     }
@@ -126,6 +131,7 @@ public class BucketServiceImpl implements BucketService {
                 snsService.notifyFileUploaded("File uploaded to bucket : "+bucketName);
             }
         } catch (IOException e) {
+            logger.error("[BucketService]-ERROR while updating file to bucket");
             throw new FileUploadException("Unable to upload the file: " + e.getMessage());
         }
     }
@@ -161,6 +167,7 @@ public class BucketServiceImpl implements BucketService {
                 }
             }
         } catch (IOException e) {
+            logger.error("[BucketService]-ERROR while compressing and updating file to bucket");
             throw new FileUploadException("Unable to upload the file: " + e.getMessage());
         }
     }
@@ -185,6 +192,7 @@ public class BucketServiceImpl implements BucketService {
                 return new FileDownloaded(inputStreamResource,contentType,key);
             }
         } catch (Exception e) {
+            logger.error("[BucketService]-ERROR downloading file from bucket");
             throw new FileDownloadException("Unable to download S3 file!.", e);
         }
     }
@@ -202,6 +210,7 @@ public class BucketServiceImpl implements BucketService {
         try{
             return s3Presigner.presignGetObject(getObjectPresignRequest).url().toString();
         }catch (S3Exception e){
+            logger.error("[BucketService]-ERROR generating file url");
             throw new PresignUrlException("Unable to generate the file url");
         }
     }
@@ -231,6 +240,7 @@ public class BucketServiceImpl implements BucketService {
             }
             throw new ContentNotFoundException("Unable to find file with key: "+searchString);
         }catch (S3Exception ex){
+            logger.error("[BucketService]-ERROR searching file");
             throw new IllegalArgumentException("Bucket does not exist: " + bucketName);
         }
     }
@@ -255,6 +265,7 @@ public class BucketServiceImpl implements BucketService {
 
             return new ListAllFoldersResult(foldersSet, foldersSet.size());
         } catch (S3Exception e) {
+            logger.error("[BucketService]-ERROR listing all bucket folders");
             throw new IllegalArgumentException("Bucket does not exist: " + bucketName);
         }
     }
@@ -286,6 +297,7 @@ public class BucketServiceImpl implements BucketService {
 
             return foldersSize;
         } catch (S3Exception e) {
+            logger.error("[BucketService]-ERROR listing all folders size");
             throw new IllegalArgumentException("Bucket does not exist: " + bucketName);
         }
     }
@@ -310,6 +322,7 @@ public class BucketServiceImpl implements BucketService {
 
             return new ListAllFileExtensions(extensionsSet, extensionsSet.size());
         } catch (S3Exception e) {
+            logger.error("[BucketService]-ERROR listing all file extensions");
             throw new IllegalArgumentException("Bucket does not exist: " + bucketName);
         }
     }
@@ -337,6 +350,7 @@ public class BucketServiceImpl implements BucketService {
 
             return new CountExtensionOccurrences(extension, extensionOccurrences.size(),extensionOccurrences);
         } catch (S3Exception e) {
+            logger.error("[BucketService]-ERROR couting extensions occurrences");
             throw new IllegalArgumentException("Bucket does not exist: " + bucketName);
         }
     }
@@ -355,6 +369,7 @@ public class BucketServiceImpl implements BucketService {
             s3Client.copyObject(copyObjectRequest);
             performDeleteObject(s3Client,key,deleteObjectRequest,listObjectsV2Request);
         }catch (S3Exception e){
+            logger.error("[BucketService]-ERROR moving file");
             throw new CopyFileException("Unable to move file from "+sourceBucket+" to "+targetBucket);
         }
     }
@@ -373,6 +388,7 @@ public class BucketServiceImpl implements BucketService {
             performDeleteObject(s3Client,key, deleteObjectRequest, listObjectsV2Request);
             snsService.notifyFileDeleted("File name: "+key + "deleted!");
         } catch (S3Exception e) {
+            logger.error("[BucketService]-ERROR deleting file");
             throw new FileDeleteException("Unable to delete file from S3 bucket!", e);
         }
     }
