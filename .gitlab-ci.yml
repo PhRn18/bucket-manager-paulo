@@ -24,6 +24,7 @@ build:
         - src/**/*
   script:
     - mvn clean install
+    
 
 compile:
   stage: compile
@@ -42,6 +43,7 @@ codeQuality:
     - mvn checkstyle:checkstyle
     - cat target/checkstyle-result.xml
   artifacts:
+    expire_in: 30 minutes
     paths:
       - target/checkstyle-result.xml
 
@@ -53,6 +55,7 @@ test:
   script:
     - mvn test -Punit-tests
   artifacts:
+    expire_in: 30 minutes
     reports:
       junit:
         - target/surefire-reports/TEST-*.xml
@@ -66,6 +69,7 @@ buildJar:
   script:
     - mvn package
   artifacts: 
+    expire_in: 30 minutes
     when: on_success
     paths:
       - target/bucket-manager.jar
