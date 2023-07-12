@@ -71,8 +71,8 @@ public class TokenServiceImpl implements TokenService {
      *
      * @return A data de expiração, configurada para 2 horas a partir do momento atual.
      */
-    private Instant genExpirationDate(){
-        return LocalDateTime.now().plusSeconds(10).toInstant(ZoneOffset.of("-03:00"));
+    protected Instant genExpirationDate(){
+        return LocalDateTime.now().plusHours(1).toInstant(ZoneOffset.of("-03:00"));
     }
 
 }

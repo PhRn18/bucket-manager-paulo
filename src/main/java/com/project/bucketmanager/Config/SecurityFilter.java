@@ -15,6 +15,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,7 +42,7 @@ public class SecurityFilter extends OncePerRequestFilter {
         }
         filterChain.doFilter(request, response);
     }
-    private void sendErrorMessage(HttpServletResponse response) throws IOException {
+    protected void sendErrorMessage(HttpServletResponse response) throws IOException {
         Map<String, String> params = new HashMap<>();
         params.put("Error", "Invalid or expired Bearer token");
 
@@ -49,7 +50,7 @@ public class SecurityFilter extends OncePerRequestFilter {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.getWriter().write(objectMapper.writeValueAsString(params));
     }
-    private String retreiveTokenFromHeader(HttpServletRequest request) {
+    protected String retreiveTokenFromHeader(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
         if(authHeader==null) return null;
         return authHeader.replace("Bearer ","");
