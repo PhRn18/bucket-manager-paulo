@@ -3,6 +3,7 @@ package com.project.bucketmanager.Controllers;
 import com.project.bucketmanager.Config.AutoCreateBuckets;
 import com.project.bucketmanager.Models.*;
 import com.project.bucketmanager.Services.BucketService;
+import com.project.bucketmanager.Validation.Security.AllowReadAndWrite;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.InputStreamResource;
@@ -32,6 +33,7 @@ public class BucketController {
         return ResponseEntity.ok(result);
     }
     @GetMapping("/{bucketName}")
+    @AllowReadAndWrite
     public ResponseEntity<BucketContent> listAllBucketContent(@PathVariable String bucketName){
         logger.info("[BucketController]-Listing all bucket content...");
         BucketContent result = bucketService.listAllBucketContent(bucketName);
@@ -39,6 +41,7 @@ public class BucketController {
     }
 
     @GetMapping("/details/{bucketName}")
+    @AllowReadAndWrite
     public ResponseEntity<ContentDetails> listBucketContentDetails(
             @PathVariable String bucketName,
             @RequestParam String key
@@ -49,6 +52,7 @@ public class BucketController {
     }
 
     @PostMapping("/{bucketName}")
+    @AllowReadAndWrite
     public ResponseEntity<FileUploaded> uploadFileToBucket(
             @RequestParam("file")MultipartFile file,
             @PathVariable String bucketName
@@ -60,6 +64,7 @@ public class BucketController {
     }
 
     @PostMapping("/compress/{bucketName}")
+    @AllowReadAndWrite
     public ResponseEntity<CompressedFileUpdate> compressedFileUpdateToBucket(
             @RequestParam("file") MultipartFile file,
             @PathVariable String bucketName
@@ -70,6 +75,7 @@ public class BucketController {
     }
 
     @GetMapping("/download/{bucketName}/{contentDisposition}")
+    @AllowReadAndWrite
     public ResponseEntity<Resource> downloadFileFromBucket(
             @PathVariable String bucketName,
             @RequestParam String key,
@@ -94,6 +100,7 @@ public class BucketController {
     }
 
     @GetMapping("/url/{bucketName}/{expirationTime}")
+    @AllowReadAndWrite
     public ResponseEntity<String> generateFileUrl(
             @PathVariable String bucketName,
             @RequestParam String key,
@@ -105,6 +112,7 @@ public class BucketController {
     }
 
     @GetMapping("/search/{bucketName}")
+    @AllowReadAndWrite
     public ResponseEntity<SearchFileResult> searchFile(
             @PathVariable String bucketName,
             @RequestParam String searchString
@@ -115,6 +123,7 @@ public class BucketController {
     }
 
     @GetMapping("/folders/{bucketName}")
+    @AllowReadAndWrite
     public ResponseEntity<ListAllFoldersResult> listAllFolders(
             @PathVariable String bucketName
     ){
@@ -124,6 +133,7 @@ public class BucketController {
     }
 
     @GetMapping("/folders/listSize/{bucketName}")
+    @AllowReadAndWrite
     public ResponseEntity<FoldersSize> listAllFoldersSize(
             @PathVariable String bucketName
     ){
@@ -134,6 +144,7 @@ public class BucketController {
     }
 
     @GetMapping("/fileExtensions/{bucketName}")
+    @AllowReadAndWrite
     public ResponseEntity<ListAllFileExtensions> listAllFileExtensions(
             @PathVariable String bucketName
     ){
@@ -143,6 +154,7 @@ public class BucketController {
     }
 
     @GetMapping("/fileExtensions/count/{bucketName}/{extension}")
+    @AllowReadAndWrite
     public ResponseEntity<CountExtensionOccurrences> countExtensionOccurrences(
             @PathVariable String bucketName,
             @PathVariable String extension
@@ -153,6 +165,7 @@ public class BucketController {
     }
 
     @PutMapping("/move/{sourceBucket}/{targetBucket}")
+    @AllowReadAndWrite
     public ResponseEntity<?> moveFileToAnotherBucket(
             @PathVariable String sourceBucket,
             @PathVariable String targetBucket,
@@ -164,6 +177,7 @@ public class BucketController {
     }
 
     @DeleteMapping("/{bucketName}")
+    @AllowReadAndWrite
     public ResponseEntity<?> deleteBucketFile(
             @PathVariable String bucketName,
             @RequestParam String key
