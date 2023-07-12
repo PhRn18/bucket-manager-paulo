@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import software.amazon.awssdk.services.s3.model.S3Object;
 import static org.assertj.core.api.Assertions.*;
-@SpringBootTest
+
 class ContentTest {
 
     @Test

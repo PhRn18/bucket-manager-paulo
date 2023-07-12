@@ -1,5 +1,7 @@
 package com.project.bucketmanager.Controllers;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.bucketmanager.Models.*;
 import com.project.bucketmanager.Services.BucketService;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,11 +12,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.multipart.MultipartFile;
 
+import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -23,13 +27,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import java.io.ByteArrayInputStream;
-import java.util.ArrayList;
-import java.util.List;
+import java.time.Instant;
+import java.util.*;
 
 
 @SpringBootTest
 class BucketControllerTest {
     private MockMvc mockMvc;
+    private ObjectMapper objectMapper;
     @Mock
     private BucketService bucketService;
 
@@ -38,6 +43,160 @@ class BucketControllerTest {
         MockitoAnnotations.openMocks(this);
         BucketController bucketController = new BucketController(bucketService);
         mockMvc = MockMvcBuilders.standaloneSetup(bucketController).build();
+        objectMapper = new ObjectMapper();
+    }
+    @Test
+    void listAllBucketsSuccess() throws Exception {
+        BucketDetails bucket1 = new BucketDetails("bucket1", Instant.now());
+        BucketDetails bucket2 = new BucketDetails("bucket2", Instant.now());
+        List<BucketDetails> buckets = List.of(bucket1,bucket2);
+        when(bucketService.listAllBuckets()).thenReturn(buckets);
+
+        MvcResult mvcResult = mockMvc.perform(
+                get("/bucket/list")
+        ).andExpect(status().isOk()).andReturn();
+        String result = mvcResult.getResponse().getContentAsString();
+        List<Object> responseBuckets = objectMapper.readValue(result, new TypeReference<>() {});
+        assertThat(responseBuckets.size()).isNotZero();
+    }
+    @Test
+    void listAllBucketFail() throws Exception {
+        List<BucketDetails> buckets = Collections.emptyList();
+        when(bucketService.listAllBuckets()).thenReturn(buckets);
+        mockMvc.perform(
+                get("/bucket/list")
+        ).andExpect(status().isNoContent()).andReturn();
+    }
+
+    @Test
+    void compressFileAndUpdate() throws Exception {
+        String bucketName = "mockbucket";
+        MockMultipartFile multipartFile = new MockMultipartFile("file", "test-file.txt", MediaType.TEXT_PLAIN_VALUE, "Test data".getBytes());
+
+        CompressedFileUpdate expectedResult = new CompressedFileUpdate();
+        when(bucketService.compressAndUpdateFileToBucket(eq(multipartFile), eq(bucketName))).thenReturn(expectedResult);
+
+        mockMvc.perform(multipart("/bucket/compress/{bucketName}", bucketName)
+                        .file(multipartFile))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        verify(bucketService).compressAndUpdateFileToBucket(eq(multipartFile), eq(bucketName));
+    }
+
+    @Test
+    void searchFileExactMatch() throws Exception {
+        String bucketName = "bucketname";
+        List<String> keys = List.of("key1","key2");
+        SearchFileResult searchFileResult = new SearchFileResult(keys,true,false);
+        when(bucketService.searchFile(anyString(),anyString())).thenReturn(searchFileResult);
+        MvcResult mvcResult = mockMvc.perform(
+                        get("/bucket/search/{bucketName}", bucketName)
+                                .queryParam("searchString", "key1")
+                ).andExpect(status().isOk())
+                .andReturn();
+        SearchFileResult responseKeys = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), SearchFileResult.class);
+        assertThat(responseKeys.getKey().size()).isEqualTo(keys.size());
+    }
+    @Test
+    void searchFilePartialMatch() throws Exception {
+        String bucketName = "bucketname";
+        List<String> keys = List.of("key1","key2");
+        SearchFileResult searchFileResult = new SearchFileResult(keys,false,true);
+        when(bucketService.searchFile(anyString(),anyString())).thenReturn(searchFileResult);
+        MvcResult mvcResult = mockMvc.perform(
+                        get("/bucket/search/{bucketName}", bucketName)
+                                .queryParam("searchString", "key")
+                ).andExpect(status().isOk())
+                .andReturn();
+        SearchFileResult responseKeys = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), SearchFileResult.class);
+        assertThat(responseKeys.getKey().size()).isEqualTo(keys.size());
+    }
+    @Test
+    void listAllFolders() throws Exception {
+        String bucketName = "bucket";
+        Set<String> folders = new HashSet<>();
+        folders.add("folder1");
+        folders.add("folder2");
+        ListAllFoldersResult listAllFoldersResult = new ListAllFoldersResult(folders,folders.size());
+        when(bucketService.listAllFolders(anyString())).thenReturn(listAllFoldersResult);
+        MvcResult mvcResult = mockMvc.perform(
+                        get("/bucket/folders/{bucketName}", bucketName)
+                ).andExpect(status().isOk())
+                .andReturn();
+        ListAllFoldersResult response = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), ListAllFoldersResult.class);
+        assertThat(response.getNumberOfFolders()).isEqualTo(listAllFoldersResult.getNumberOfFolders());
+    }
+    @Test
+    void listAllFoldersSize() throws Exception {
+        String bucketName = "bucketname";
+
+        Map<String,String> folder1 = new HashMap<>();
+        folder1.put("key","value1");
+
+        Map<String,String> folder2 = new HashMap<>();
+        folder2.put("key","value2");
+
+        List<Map<String,String>> folders = new ArrayList<>();
+
+        folders.add(folder1);
+        folders.add(folder2);
+        FoldersSize foldersSize = new FoldersSize(folders,folders.size(),30.00);
+
+        when(bucketService.listAllFoldersSize(anyString())).thenReturn(foldersSize);
+
+        MvcResult mvcResult = mockMvc.perform(
+                get("/bucket/folders/listSize/{bucketName}", bucketName)
+        ).andExpect(status().isOk()).andReturn();
+
+        FoldersSize result = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), FoldersSize.class);
+        assertThat(result.getFolders().size()).isEqualTo(folders.size());
+        assertThat(result.getNumberOfFolders()).isEqualTo(folders.size());
+    }
+    @Test
+    void listAllFileExtensions() throws Exception {
+        String bucketname = "bucketname";
+        Set<String> fileExtensions = new HashSet<>();
+        fileExtensions.add("key1");
+        fileExtensions.add("key2");
+        ListAllFileExtensions listAllFileExtensions = new ListAllFileExtensions(fileExtensions,fileExtensions.size());
+        when(bucketService.listAllFileExtensions(anyString())).thenReturn(listAllFileExtensions);
+        MvcResult mvcResult = mockMvc.perform(
+                get("/bucket/fileExtensions/{bucketName}", bucketname)
+        ).andExpect(status().isOk()).andReturn();
+        ListAllFileExtensions response = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), ListAllFileExtensions.class);
+        assertThat(response.getFileExtensions().size()).isEqualTo(listAllFileExtensions.getFileExtensions().size());
+        assertThat(response.getNumberOfExtensions()).isEqualTo(listAllFileExtensions.getNumberOfExtensions());
+    }
+    @Test
+    void countExtensionOccurrences() throws Exception {
+        String bucketname = "bucketname";
+        String extension = "extension";
+        List<String> fileNames = new ArrayList<>();
+        fileNames.add("file1");
+        fileNames.add("file2");
+        CountExtensionOccurrences countExtensionOccurrences = new CountExtensionOccurrences(extension, fileNames.size(), fileNames);
+        when(bucketService.countExtensionOccurrences(anyString(),anyString())).thenReturn(countExtensionOccurrences);
+        MvcResult mvcResult = mockMvc.perform(
+                get("/bucket/fileExtensions/count/{bucketName}/{extension}", bucketname, extension)
+        ).andExpect(status().isOk()).andReturn();
+        CountExtensionOccurrences result = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), CountExtensionOccurrences.class);
+        assertThat(result.getFileName().size()).isEqualTo(countExtensionOccurrences.getFileName().size());
+        assertThat(result.getOccurrences()).isEqualTo(countExtensionOccurrences.getOccurrences());
+        assertThat(result.getExtension()).isEqualTo(countExtensionOccurrences.getExtension());
+    }
+    @Test
+    void moveFileToAnotherBucket() throws Exception {
+        String sourceBucket = "sourcebucket";
+        String targetBucket = "targetBucket";
+        String key = "key";
+        doNothing().when(bucketService).moveFileToAnotherBucket(sourceBucket,targetBucket,key);
+        mockMvc.perform(
+                put("/bucket/move/{sourceBucket}/{targetBucket}",sourceBucket,targetBucket)
+                        .queryParam("key",key)
+                )
+                .andExpect(status().isCreated()).andReturn();
+        verify(bucketService).moveFileToAnotherBucket(anyString(),anyString(),anyString());
     }
     @Test
     void listAllBucketContent() throws Exception {

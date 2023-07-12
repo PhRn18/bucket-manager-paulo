@@ -13,6 +13,9 @@ public class CountExtensionOccurrences {
         this.fileName = fileName;
     }
 
+    public CountExtensionOccurrences() {
+    }
+
     public List<String> getFileName() {
         return fileName;
     }

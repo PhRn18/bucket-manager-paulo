@@ -1,9 +1,7 @@
 package com.project.bucketmanager.Services.Impl;
 
 import com.project.bucketmanager.ExceptionHandler.Exceptions.FileAlreadyExistsException;
-import com.project.bucketmanager.Models.BucketContent;
-import com.project.bucketmanager.Models.Content;
-import com.project.bucketmanager.Models.ContentDetails;
+import com.project.bucketmanager.Models.*;
 import com.project.bucketmanager.Services.BucketService;
 import com.project.bucketmanager.Services.SnsService;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,6 +41,48 @@ class BucketServiceImplTest {
     void setUp(){
         MockitoAnnotations.openMocks(this);
         bucketService = new BucketServiceImpl(s3Client,snsService,s3Presigner);
+    }
+    @Test
+    void listAllBuckets(){
+        Bucket bucket1 = Bucket.builder().name("bucket1").creationDate(Instant.now()).build();
+        Bucket bucket2 = Bucket.builder().name("bucket2").creationDate(Instant.now()).build();
+        List<Bucket> buckets = List.of(bucket1,bucket2);
+        ListBucketsResponse listBucketsResponse = ListBucketsResponse.builder().buckets(buckets).build();
+        when(s3Client.listBuckets()).thenReturn(listBucketsResponse);
+        List<BucketDetails> list = bucketService.listAllBuckets();
+        assertThat(list.size()).isEqualTo(buckets.size());
+    }
+    @Test
+    void compressAndUpdateFileToBucket(){
+        String bucketName = "myBucket";
+        String originalFileName = "file.txt";
+        byte[] fileContent = "Hello, World!".getBytes();
+        int fileSize = fileContent.length;
+
+        MockMultipartFile multipartFile = new MockMultipartFile(
+                "file",
+                originalFileName,
+                "text/plain",
+                fileContent
+        );
+
+        when(s3Client.headObject(any(HeadObjectRequest.class)))
+                .thenThrow(NoSuchKeyException.class);
+
+        when(s3Client.putObject(any(PutObjectRequest.class), any(RequestBody.class)))
+                .thenReturn(null);
+
+        CompressedFileUpdate compressedFileUpdate = bucketService.compressAndUpdateFileToBucket(multipartFile, bucketName);
+
+        verify(s3Client).headObject(any(HeadObjectRequest.class));
+
+        verify(s3Client).putObject(any(PutObjectRequest.class), any(RequestBody.class));
+
+        verify(snsService).notifyFileUploaded("File uploaded to bucket: " + bucketName);
+
+        assertThat(compressedFileUpdate.getFileName()).isEqualTo("file-txt.gz");
+        assertThat(compressedFileUpdate.getOriginalFileSize()).isEqualTo(fileSize);
+        assertThat(compressedFileUpdate.getCompressedFileSize()).isEqualTo(33L);
     }
     @Test
     void listAllBucketContent() {

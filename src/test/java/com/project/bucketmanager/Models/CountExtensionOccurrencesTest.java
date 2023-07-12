@@ -7,7 +7,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
-@SpringBootTest
+
 class CountExtensionOccurrencesTest {
 
     @Test

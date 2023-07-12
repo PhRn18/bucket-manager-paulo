@@ -15,17 +15,15 @@ import java.util.List;
 
 @Configuration
 public class AutoCreateBuckets {
-
     private static final Logger logger = LoggerFactory.getLogger(AutoCreateBuckets.class);
-
-    @Autowired
-    private Environment environment;
-
-    @Autowired
-    private S3Client s3Client;
-
-    @Value("${aws.enable.autoCreateBuckets}")
-    private boolean autoCreateBuckets;
+    private final Environment environment;
+    private final S3Client s3Client;
+    private final boolean autoCreateBuckets;
+    public AutoCreateBuckets(Environment environment, S3Client s3Client,@Value("${aws.enable.autoCreateBuckets}")boolean autoCreateBuckets) {
+        this.environment = environment;
+        this.s3Client = s3Client;
+        this.autoCreateBuckets = autoCreateBuckets;
+    }
 
     @PostConstruct
     public void createBuckets(){

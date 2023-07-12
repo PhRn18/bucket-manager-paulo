@@ -8,7 +8,7 @@ import software.amazon.awssdk.services.s3.model.S3Object;
 import java.time.Instant;
 
 import static org.assertj.core.api.Assertions.assertThat;
-@SpringBootTest
+
 class ContentDetailsTest {
 
     @Test

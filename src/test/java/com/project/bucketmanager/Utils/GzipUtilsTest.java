@@ -6,7 +6,7 @@ import org.springframework.mock.web.MockMultipartFile;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
-@SpringBootTest
+
 class GzipUtilsTest {
     @Test
     void getCompressedBytesUsingGZIP() {
