@@ -56,4 +56,7 @@ public class ContentDetails {
     public Owner getOwner() {
         return owner;
     }
+    public static ContentDetails buildEmptyResponse(){
+        return new ContentDetails();
+    }
 }

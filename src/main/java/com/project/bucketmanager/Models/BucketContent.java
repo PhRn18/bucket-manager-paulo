@@ -16,5 +16,7 @@ public class BucketContent {
     public List<Content> getObjectList() {
         return objectList;
     }
-
+    public static BucketContent buildEmptyResponse(){
+        return new BucketContent();
+    }
 }

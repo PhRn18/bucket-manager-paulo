@@ -68,15 +68,15 @@ public class BucketServiceImpl implements BucketService {
 
         try{
             ListObjectsV2Response listObjectsV2Response = s3Client.listObjectsV2(request);
-            if(listObjectsV2Response!=null){
-                List<Content> keys = listObjectsV2Response
-                        .contents()
-                        .stream()
-                        .map(Content::new)
-                        .collect(Collectors.toList());
-                return new BucketContent(keys);
+            if (listObjectsV2Response == null) {
+                return BucketContent.buildEmptyResponse();
             }
-            return new BucketContent();
+            List<Content> keys = listObjectsV2Response
+                    .contents()
+                    .stream()
+                    .map(Content::new)
+                    .collect(Collectors.toList());
+            return new BucketContent(keys);
         }catch (S3Exception ex){
             logger.error("[BucketService]-ERROR listing all bucket content");
             throw new IllegalArgumentException("Bucket does not exist: " + bucketName);
@@ -91,17 +91,17 @@ public class BucketServiceImpl implements BucketService {
 
         try{
             ListObjectsV2Response listObjectsV2Response = s3Client.listObjectsV2(request);
-            if(listObjectsV2Response!=null){
-                return listObjectsV2Response
-                        .contents()
-                        .stream()
-                        .filter(s3Object -> s3Object.key().equals(key))
-                        .map(ContentDetails::new)
-                        .findFirst()
-                        .orElseThrow(()->new ContentNotFoundException("Content with key "+key+" not found!"));
+            if (listObjectsV2Response == null) {
+                return ContentDetails.buildEmptyResponse();
             }
-            return new ContentDetails();
-        }catch (NoSuchBucketException ex){
+            return listObjectsV2Response
+                    .contents()
+                    .stream()
+                    .filter(s3Object -> s3Object.key().equals(key))
+                    .map(ContentDetails::new)
+                    .findFirst()
+                    .orElseThrow(()->new ContentNotFoundException("Content with key "+key+" not found!"));
+        }catch (S3Exception ex){
             logger.error("[BucketService]-ERROR getting bucket content details by key");
             throw new IllegalArgumentException("Bucket does not exist: " + bucketName);
         }
@@ -130,7 +130,7 @@ public class BucketServiceImpl implements BucketService {
                         .build(), fileInputStream);
                 snsService.notifyFileUploaded("File uploaded to bucket : "+bucketName);
             }
-        } catch (IOException e) {
+        } catch (S3Exception | IOException e) {
             logger.error("[BucketService]-ERROR while updating file to bucket");
             throw new FileUploadException("Unable to upload the file: " + e.getMessage());
         }
@@ -166,7 +166,7 @@ public class BucketServiceImpl implements BucketService {
                     return new CompressedFileUpdate(compressedFileName,file.getSize(), compressedFileSize);
                 }
             }
-        } catch (IOException e) {
+        } catch (S3Exception | IOException e) {
             logger.error("[BucketService]-ERROR while compressing and updating file to bucket");
             throw new FileUploadException("Unable to upload the file: " + e.getMessage());
         }
@@ -222,23 +222,24 @@ public class BucketServiceImpl implements BucketService {
 
         try{
             ListObjectsV2Response listObjectsV2Response = s3Client.listObjectsV2(request);
-            if(listObjectsV2Response!=null){
-                List<S3Object> keys = listObjectsV2Response.contents();
-                List<S3Object> filteredFiles = keys
-                        .stream()
-                        .filter(s3Object -> s3Object.key().contains(searchString))
-                        .toList();
+            List<S3Object> keys = listObjectsV2Response.contents();
+            List<S3Object> filteredFiles = keys
+                    .stream()
+                    .filter(s3Object -> s3Object.key().contains(searchString))
+                    .toList();
 
-                if(filteredFiles.isEmpty()){
-                    throw new ContentNotFoundException("Unable to find file with key: "+searchString);
-                }
-
-                List<String> fileKeys = filteredFiles.stream().map(S3Object::key).toList();
-                boolean singleResult = fileKeys.size() == 1;
-                boolean multipleResults = fileKeys.size() > 1;
-                return new SearchFileResult(fileKeys,singleResult,multipleResults);
+            if(filteredFiles.isEmpty()){
+                return SearchFileResult.buildEmptyResponse();
             }
-            throw new ContentNotFoundException("Unable to find file with key: "+searchString);
+
+            List<String> fileKeys = filteredFiles
+                    .stream()
+                    .map(S3Object::key)
+                    .toList();
+            boolean singleResult = fileKeys.size() == 1;
+            boolean multipleResults = fileKeys.size() > 1;
+
+            return new SearchFileResult(fileKeys,singleResult,multipleResults);
         }catch (S3Exception ex){
             logger.error("[BucketService]-ERROR searching file");
             throw new IllegalArgumentException("Bucket does not exist: " + bucketName);

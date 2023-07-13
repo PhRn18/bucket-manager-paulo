@@ -39,4 +39,7 @@ public class SearchFileResult {
     public void setAnotherFilesWithTheCharSequence(boolean anotherFilesWithTheCharSequence) {
         isAnotherFilesWithTheCharSequence = anotherFilesWithTheCharSequence;
     }
+    public static SearchFileResult buildEmptyResponse(){
+        return new SearchFileResult(null,false,false);
+    }
 }
