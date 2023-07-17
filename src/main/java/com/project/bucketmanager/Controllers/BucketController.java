@@ -2,6 +2,7 @@ package com.project.bucketmanager.Controllers;
 
 import com.project.bucketmanager.Config.AutoCreateBuckets;
 import com.project.bucketmanager.Models.*;
+import com.project.bucketmanager.Models.enums.EContentDisposition;
 import com.project.bucketmanager.Services.BucketService;
 import com.project.bucketmanager.Validation.Security.AllowReadAndWrite;
 import com.project.bucketmanager.Validation.Security.AllowReadUsers;
@@ -75,27 +76,21 @@ public class BucketController {
         return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
-    @GetMapping("/download/{bucketName}/{contentDisposition}")
+    @GetMapping("/download/{bucketName}")
     @AllowReadAndWrite
     public ResponseEntity<Resource> downloadFileFromBucket(
             @PathVariable String bucketName,
             @RequestParam String key,
-            @PathVariable(required = false) String contentDisposition
+            @RequestParam(required = false) String contentDisposition
     ){
         logger.info("[BucketController]-Downloading file from bucket...");
-        String contentDispositionValue = "attachment";
-        if (contentDisposition != null && !contentDisposition.isEmpty()) {
-            if (!contentDisposition.equals("inline") && !contentDisposition.equals("attachment")) {
-                throw new IllegalArgumentException("Invalid content disposition!");
-            }
-            contentDispositionValue = contentDisposition;
-        }
+        EContentDisposition contentDispositionValue = EContentDisposition.getByValue(contentDisposition);
         FileDownloaded fileDownloaded = bucketService.downloadFileFromBucket(bucketName, key);
         String contentType = fileDownloaded.getContentType();
         InputStreamResource inputStreamResource = fileDownloaded.getInputStreamResource();
 
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentDisposition(ContentDisposition.builder(contentDispositionValue).filename(fileDownloaded.getFileName()).build());
+        headers.setContentDisposition(ContentDisposition.builder(contentDispositionValue.getValue()).filename(fileDownloaded.getFileName()).build());
         headers.setContentType(MediaType.parseMediaType(contentType));
         return new ResponseEntity<>(inputStreamResource, headers, HttpStatus.OK);
     }

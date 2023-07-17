@@ -265,8 +265,9 @@ class BucketControllerTest {
         when(bucketService.downloadFileFromBucket(bucketName, key)).thenReturn(fileDownloaded);
 
         mockMvc.perform(
-                        get("/bucket/download/{bucketName}/{contentDisposition}", bucketName, contentDisposition)
+                        get("/bucket/download/{bucketName}", bucketName)
                                 .queryParam("key",key)
+                                .queryParam("contentDisposition",contentDisposition)
                 )
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.TEXT_PLAIN))
@@ -289,8 +290,9 @@ class BucketControllerTest {
         when(bucketService.downloadFileFromBucket(bucketName, key)).thenReturn(fileDownloaded);
 
         mockMvc.perform(
-                        get("/bucket/download/{bucketName}/{contentDisposition}", bucketName, contentDisposition)
+                        get("/bucket/download/{bucketName}", bucketName)
                                 .queryParam("key",key)
+                                .queryParam("contentDisposition",contentDisposition)
                 )
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.TEXT_PLAIN))
