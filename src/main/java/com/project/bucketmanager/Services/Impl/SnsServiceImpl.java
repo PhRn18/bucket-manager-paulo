@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.sns.SnsClient;
 import software.amazon.awssdk.services.sns.model.PublishRequest;
+import software.amazon.awssdk.services.sns.model.SnsException;
 
 
 @Service
@@ -41,7 +42,7 @@ public class SnsServiceImpl implements SnsService {
         publishMessage(snsFileUploadedArn,message);
     }
 
-    private void publishMessage(String topicArn, Object message) {
+    protected void publishMessage(String topicArn, Object message) {
         if(enableNotification){
             try{
                 String messageParsed = objectMapper.writeValueAsString(message);
@@ -50,7 +51,7 @@ public class SnsServiceImpl implements SnsService {
                         .message(messageParsed)
                         .build();
                 snsClient.publish(publishRequest);
-            }catch (JsonProcessingException e){
+            }catch (SnsException | JsonProcessingException e){
                 throw new RuntimeException(e.getMessage());
             }
         }else{
