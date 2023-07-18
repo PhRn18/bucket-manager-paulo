@@ -12,8 +12,8 @@ public class BucketContentTest {
     @Test
     public void testConstructorWithParameters() {
         List<Content> contentList = List.of(
-                new Content("key1", "etag1"),
-                new Content("key2", "etag2")
+                new Content("key1", "etag1",100L),
+                new Content("key2", "etag2",200L)
         );
 
         BucketContent bucketContent = new BucketContent(contentList);
