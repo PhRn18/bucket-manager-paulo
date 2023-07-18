@@ -20,6 +20,7 @@ aws:
   bucket:
     region: us-east-1
     names: bucket-test1, bucket-test2
+    maxSize: 9318621
 
   enable:
     notification: false

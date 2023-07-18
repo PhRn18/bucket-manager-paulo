@@ -24,7 +24,7 @@ public class ValidateStringParamsAspect {
         this.bucketService = bucketService;
     }
 
-    @Before("@annotation(ValidateStringParams)")
+    @Before("@annotation(com.project.bucketmanager.Validation.Annotations.ValidateStringParams)")
     public void validateStringParam(JoinPoint joinPoint) {
         Object[] args = joinPoint.getArgs();
 

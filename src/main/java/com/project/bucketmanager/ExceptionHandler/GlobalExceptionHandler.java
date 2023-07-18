@@ -89,6 +89,13 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(status).body(response);
     }
 
+    @ExceptionHandler(BucketOversizeException.class)
+    public ResponseEntity<Map<String,Object>> handleBucketOversizeException(BucketOversizeException ex){
+        HttpStatus status = HttpStatus.INSUFFICIENT_STORAGE;
+        Map<String,Object> response = buildDefaultErrorMap(ex,status);
+        return ResponseEntity.status(status).body(response);
+    }
+
     protected Map<String,Object> buildDefaultErrorMap(Exception ex,HttpStatus status){
         Map<String,Object> response = new HashMap<>();
         response.put("HTTP_STATUS",status);

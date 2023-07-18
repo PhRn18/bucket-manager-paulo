@@ -202,9 +202,9 @@ class BucketControllerTest {
     void listAllBucketContent() throws Exception {
         String bucketName = "bucket-name";
         BucketContent bucketContent = new BucketContent(List.of(
-                new Content("fdsdfsfds","312321213"),
-                new Content("grgr","324132321"),
-                new Content("1231dsas","fadfda")
+                new Content("fdsdfsfds","312321213",100L),
+                new Content("grgr","324132321",200L),
+                new Content("1231dsas","fadfda",300L)
         ));
         when(bucketService.listAllBucketContent(bucketName)).thenReturn(bucketContent);
 

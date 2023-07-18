@@ -10,7 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Aspect
 @Component
 public class ValidateMultipartFileAspect {
-    @Before("@annotation(ValidateMultipartFile)")
+    @Before("@annotation(com.project.bucketmanager.Validation.Annotations.ValidateMultipartFile)")
     public void validateFile(JoinPoint joinPoint){
         Object[] args = joinPoint.getArgs();
         for(Object arg:args){
