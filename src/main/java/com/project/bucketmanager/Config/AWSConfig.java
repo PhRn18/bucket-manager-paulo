@@ -7,6 +7,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.cloudwatch.CloudWatchClient;
+import software.amazon.awssdk.services.cloudwatch.CloudWatchClientBuilder;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
@@ -68,6 +70,21 @@ public class AWSConfig {
         return getSnsBuilder().build();
     }
 
+    @Bean
+    @ConditionalOnProperty(value = "spring.profiles.active", havingValue = "dev")
+    public CloudWatchClient buildDevCloudWatchClient(@Value("${aws.bucket.endpoint}") String endpoint){
+        return getCloudWatchClient().endpointOverride(URI.create(endpoint)).build();
+    }
+
+    @Bean
+    @ConditionalOnProperty(value = "spring.profiles.active", havingValue = "prod", matchIfMissing = true)
+    public CloudWatchClient buildProdCloudWatchClient(){
+        return getCloudWatchClient().build();
+    }
+    private CloudWatchClientBuilder getCloudWatchClient(){
+        return CloudWatchClient.builder()
+                .region(Region.of(bucketRegion));
+    }
     private SnsClientBuilder getSnsBuilder(){
         return SnsClient.builder()
                 .region(Region.of(snsRegion));
