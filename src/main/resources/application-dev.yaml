@@ -21,7 +21,7 @@ aws:
     metrics: true
 
   metrics:
-    names: metric1, metric2
+    names: metric1, metric2, BucketSizeBytes
 
   sns:
     region: us-east-1

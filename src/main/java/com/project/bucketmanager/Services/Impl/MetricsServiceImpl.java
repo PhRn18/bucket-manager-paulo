@@ -11,6 +11,7 @@ import software.amazon.awssdk.services.cloudwatch.model.*;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 @Service
 public class MetricsServiceImpl implements MetricsService {
@@ -23,9 +24,15 @@ public class MetricsServiceImpl implements MetricsService {
     @Override
     @ValidateStringParams
     @ValidateMetricsParams
-    public Object getMetrics(String metricName,String bucketName, String typeOfStatistics) {
-
+    public List<Datapoint> getMetrics(String metricName, String bucketName, String typeOfStatistics) {
         Statistic statistic = Statistic.fromValue(typeOfStatistics);
+
+        Dimension dimension = Dimension
+                .builder()
+                .name("BucketName")
+                .value(bucketName)
+                .build();
+
         GetMetricStatisticsRequest request = GetMetricStatisticsRequest.builder()
                 .namespace("AWS/S3")
                 .metricName(metricName)
@@ -33,16 +40,10 @@ public class MetricsServiceImpl implements MetricsService {
                 .endTime(Instant.now())
                 .period(86400)
                 .statistics(statistic)
-                .dimensions(Dimension.builder().name("BucketName").value(bucketName).build())
+                .dimensions(dimension)
                 .build();
-        GetMetricStatisticsResponse response = cloudWatchClient.getMetricStatistics(request);
 
-        for (Datapoint datapoint : response.datapoints()) {
-            System.out.println("Timestamp: " + datapoint.timestamp());
-            System.out.println("Valor: " + datapoint.sum());
-            System.out.println("------------------------------------");
-        }
-        return null;
+        return cloudWatchClient.getMetricStatistics(request).datapoints();
     }
 
     @Override
