@@ -1,3 +1,13 @@
+spring:
+  datasource:
+    url: dsadsaas
+    username: dasasddsa
+    password: dasdsadssda
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+
 aws:
   bucket:
     region: us-east-1

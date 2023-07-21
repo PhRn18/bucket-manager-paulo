@@ -1,10 +1,11 @@
-package com.project.bucketmanager.Validation;
+package com.project.bucketmanager.Aspects.Validation;
 
+import com.project.bucketmanager.Aspects.Validation.Annotations.OverrideMaxBucketSize;
 import com.project.bucketmanager.ExceptionHandler.Exceptions.BucketOversizeException;
 import com.project.bucketmanager.ExceptionHandler.Exceptions.FileUploadException;
 import com.project.bucketmanager.Models.Content;
 import com.project.bucketmanager.Services.BucketService;
-import com.project.bucketmanager.Validation.Annotations.OverrideMaxBucketSize;
+import com.project.bucketmanager.Aspects.AspectUtils;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
@@ -25,19 +26,19 @@ public class CheckBucketSizeAspect {
         this.bucketService = bucketService;
         this.maxSize = Long.parseLong(maxSize);
     }
-    @Before("@annotation(com.project.bucketmanager.Validation.Annotations.CheckBucketSize)")
+    @Before("@annotation(com.project.bucketmanager.Aspects.Validation.Annotations.CheckBucketSize)")
     public void beforeMethodExecution(JoinPoint joinPoint) {
         MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
         Method method = methodSignature.getMethod();
         Object[] args = joinPoint.getArgs();
 
-        Optional<String> optionalBucketName = findParameterByName(
+        Optional<String> optionalBucketName = AspectUtils.findParameterByName(
                 methodSignature,
                 args,
                 "bucketName",
                 String.class);
 
-        Optional<MultipartFile> optionalMultipartFile = findParameterByName(
+        Optional<MultipartFile> optionalMultipartFile = AspectUtils.findParameterByName(
                 methodSignature,
                 args,
                 "file",
@@ -81,18 +82,4 @@ public class CheckBucketSizeAspect {
         return Optional.empty();
     }
 
-    protected  <T> Optional<T> findParameterByName(
-            MethodSignature methodSignature,
-            Object[] args,
-            String parameterName,
-            Class<T> parameterType
-    ) {
-        String[] parameterNames = methodSignature.getParameterNames();
-        for (int i = 0; i < parameterNames.length; i++) {
-            if (parameterName.equals(parameterNames[i])) {
-                return Optional.of(parameterType.cast(args[i]));
-            }
-        }
-        return Optional.empty();
-    }
 }

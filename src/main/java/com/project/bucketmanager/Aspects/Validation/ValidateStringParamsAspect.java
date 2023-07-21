@@ -1,4 +1,4 @@
-package com.project.bucketmanager.Validation;
+package com.project.bucketmanager.Aspects.Validation;
 
 import com.project.bucketmanager.Models.BucketDetails;
 import com.project.bucketmanager.Services.BucketService;
@@ -24,7 +24,7 @@ public class ValidateStringParamsAspect {
         this.bucketService = bucketService;
     }
 
-    @Before("@annotation(com.project.bucketmanager.Validation.Annotations.ValidateStringParams)")
+    @Before("@annotation(com.project.bucketmanager.Aspects.Validation.Annotations.ValidateStringParams)")
     public void validateStringParam(JoinPoint joinPoint) {
         Object[] args = joinPoint.getArgs();
 

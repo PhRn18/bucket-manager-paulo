@@ -1,5 +1,6 @@
 package com.project.bucketmanager.Services.Impl;
 
+import com.project.bucketmanager.Aspects.Logs.RegisterLogs;
 import com.project.bucketmanager.ExceptionHandler.Exceptions.InvalidBearerTokenException;
 import com.project.bucketmanager.Models.LoginRequest;
 import com.project.bucketmanager.Services.AuthService;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
  * Ela implementa a interface `AuthService`.
  */
 @Service
+@RegisterLogs
 public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
     private final TokenService tokenService;

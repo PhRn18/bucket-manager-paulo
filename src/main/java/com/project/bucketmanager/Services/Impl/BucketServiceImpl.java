@@ -1,13 +1,14 @@
 package com.project.bucketmanager.Services.Impl;
 
 import com.project.bucketmanager.Config.AutoCreateBuckets;
+import com.project.bucketmanager.Aspects.Logs.RegisterLogs;
 import com.project.bucketmanager.ExceptionHandler.Exceptions.*;
 import com.project.bucketmanager.Models.*;
 import com.project.bucketmanager.Services.BucketService;
 import com.project.bucketmanager.Services.SnsService;
 import com.project.bucketmanager.Utils.FileUtil;
-import com.project.bucketmanager.Validation.Annotations.ValidateMultipartFile;
-import com.project.bucketmanager.Validation.Annotations.ValidateStringParams;
+import com.project.bucketmanager.Aspects.Validation.Annotations.ValidateMultipartFile;
+import com.project.bucketmanager.Aspects.Validation.Annotations.ValidateStringParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.CacheEvict;
@@ -34,6 +35,7 @@ import static com.project.bucketmanager.Utils.GzipUtils.getCompressedBytesUsingG
 import static com.project.bucketmanager.Utils.S3ServiceHelper.*;
 
 @Service
+@RegisterLogs
 public class BucketServiceImpl implements BucketService {
     private static final Logger logger = LoggerFactory.getLogger(AutoCreateBuckets.class);
     private final S3Client s3Client;

@@ -1,4 +1,4 @@
-package com.project.bucketmanager.Validation.Security;
+package com.project.bucketmanager.Aspects.Validation.Security;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 
@@ -9,6 +9,6 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-@PreAuthorize("hasAnyRole('ROLE_WRITE')")
-public @interface AllowWritterUsers {
+@PreAuthorize("hasAnyRole('ROLE_READ')")
+public @interface AllowReadUsers {
 }

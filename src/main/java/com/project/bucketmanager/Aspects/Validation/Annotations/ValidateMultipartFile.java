@@ -1,6 +1,4 @@
-package com.project.bucketmanager.Validation.Security;
-
-import org.springframework.security.access.prepost.PreAuthorize;
+package com.project.bucketmanager.Aspects.Validation.Annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -9,6 +7,5 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-@PreAuthorize("hasAnyRole('ROLE_READ')")
-public @interface AllowReadUsers {
+public @interface ValidateMultipartFile {
 }

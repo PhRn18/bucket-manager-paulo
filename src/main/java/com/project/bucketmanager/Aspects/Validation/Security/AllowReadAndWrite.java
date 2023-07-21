@@ -1,4 +1,6 @@
-package com.project.bucketmanager.Validation.Annotations;
+package com.project.bucketmanager.Aspects.Validation.Security;
+
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -7,5 +9,6 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface ValidateStringParams {
+@PreAuthorize("hasAnyRole('ROLE_READ','ROLE_WRITE')")
+public @interface AllowReadAndWrite {
 }
