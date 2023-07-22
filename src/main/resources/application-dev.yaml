@@ -18,6 +18,10 @@ aws:
   enable:
     notification: false
     autoCreateBuckets: true
+    metrics: true
+
+  metrics:
+    names: metric1, metric2
 
   sns:
     region: us-east-1

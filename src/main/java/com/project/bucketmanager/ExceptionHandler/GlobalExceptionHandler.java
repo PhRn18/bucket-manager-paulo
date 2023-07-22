@@ -5,6 +5,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import software.amazon.awssdk.services.cloudwatch.model.Statistic;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -92,6 +93,29 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BucketOversizeException.class)
     public ResponseEntity<Map<String,Object>> handleBucketOversizeException(BucketOversizeException ex){
         HttpStatus status = HttpStatus.INSUFFICIENT_STORAGE;
+        Map<String,Object> response = buildDefaultErrorMap(ex,status);
+        return ResponseEntity.status(status).body(response);
+    }
+
+    @ExceptionHandler(InvalidMetricNameException.class)
+    public ResponseEntity<Map<String,Object>> handleInvalidMetricNameException(InvalidMetricNameException ex){
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        Map<String,Object> response = buildDefaultErrorMap(ex,status);
+        response.put("Solution","Please contact the application's administrator to check which metrics are enabled");
+        return ResponseEntity.status(status).body(response);
+    }
+
+    @ExceptionHandler(InvalidStatisticTypeException.class)
+    public ResponseEntity<Map<String,Object>> handleInvalidStatisticTypeException(InvalidStatisticTypeException ex){
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+        Map<String,Object> response = buildDefaultErrorMap(ex,status);
+        response.put("Solution","Valid Statistics type are: ["+ Statistic.knownValues()+"]");
+        return ResponseEntity.status(status).body(response);
+    }
+
+    @ExceptionHandler(ParameterRecoveryException.class)
+    public ResponseEntity<Map<String,Object>> handleParameterRecoveryException(ParameterRecoveryException ex){
+        HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
         Map<String,Object> response = buildDefaultErrorMap(ex,status);
         return ResponseEntity.status(status).body(response);
     }

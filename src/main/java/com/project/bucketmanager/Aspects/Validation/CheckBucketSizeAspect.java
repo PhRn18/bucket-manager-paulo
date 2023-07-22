@@ -3,6 +3,7 @@ package com.project.bucketmanager.Aspects.Validation;
 import com.project.bucketmanager.Aspects.Validation.Annotations.OverrideMaxBucketSize;
 import com.project.bucketmanager.ExceptionHandler.Exceptions.BucketOversizeException;
 import com.project.bucketmanager.ExceptionHandler.Exceptions.FileUploadException;
+import com.project.bucketmanager.ExceptionHandler.Exceptions.ParameterRecoveryException;
 import com.project.bucketmanager.Models.Content;
 import com.project.bucketmanager.Services.BucketService;
 import com.project.bucketmanager.Aspects.AspectUtils;
@@ -47,11 +48,11 @@ public class CheckBucketSizeAspect {
         getOverriddenMaxBucketSize(method).ifPresent(aLong -> maxSize = aLong);
 
         String bucketName = optionalBucketName.orElseThrow(
-                () -> new FileUploadException("Failed to retrieve the parameter 'bucketName' to validate the total size of the bucket")
+                () -> new ParameterRecoveryException("Failed to retrieve the parameter 'bucketName' to validate the total size of the bucket")
         );
 
         MultipartFile multipartFile = optionalMultipartFile.orElseThrow(
-                () -> new FileUploadException("Failed to retrieve the parameter 'file' to validate the total size of the bucket")
+                () -> new ParameterRecoveryException("Failed to retrieve the parameter 'file' to validate the total size of the bucket")
         );
 
         long bucketSize = bucketService.listAllBucketContent(bucketName)
