@@ -31,7 +31,6 @@ import java.time.Instant;
 import java.util.*;
 
 
-@SpringBootTest
 class BucketControllerTest {
     private MockMvc mockMvc;
     private ObjectMapper objectMapper;

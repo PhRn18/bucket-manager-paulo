@@ -15,7 +15,7 @@ import java.util.Map;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
-@SpringBootTest
+
 class CustomAccessDeniedHandlerTest {
     private CustomAccessDeniedHandler accessDeniedHandler;
     private MockHttpServletRequest request;

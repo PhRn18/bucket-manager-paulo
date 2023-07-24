@@ -1,0 +1,36 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:3333/bucketmanager
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
+    hibernate:
+      ddl-auto: none
+  flyway:
+    locations: classpath:db/migration
+
+aws:
+  bucket:
+    region: us-east-1
+    names: bucket-test1, bucket-test2
+    maxSize: 9318621
+
+  enable:
+    notification: false
+    autoCreateBuckets: false
+    metrics: true
+
+  metrics:
+    names: metric1, metric2, BucketSizeBytes
+
+  sns:
+    region: us-east-1
+    file:
+      deleted:
+        arn: adsdsasdasda
+      uploaded:
+        arn: saddsasaddsa

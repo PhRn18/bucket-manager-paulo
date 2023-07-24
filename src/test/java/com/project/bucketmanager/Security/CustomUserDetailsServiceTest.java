@@ -8,10 +8,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-@SpringBootTest
 class CustomUserDetailsServiceTest {
-    @Autowired
-    private CustomUserDetailsService customUserDetailsService;
+    private CustomUserDetailsService customUserDetailsService = new CustomUserDetailsService();
     @Test
     void loadUserByUsername_ValidUsername() {
         String username = "read";

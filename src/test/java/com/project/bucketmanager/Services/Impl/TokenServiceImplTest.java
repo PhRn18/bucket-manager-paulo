@@ -18,7 +18,7 @@ import java.util.List;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 
-@SpringBootTest
+
 class TokenServiceImplTest {
     private static TokenServiceImpl tokenService;
     @BeforeAll
