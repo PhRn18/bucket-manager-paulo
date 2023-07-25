@@ -19,7 +19,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 
 import static org.mockito.Mockito.*;
-@SpringBootTest
+
 class SecurityFilterTest {
     @Mock
     private TokenService tokenService;
